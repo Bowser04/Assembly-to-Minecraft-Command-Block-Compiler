@@ -71,7 +71,7 @@ python compiler.py input.asm --verbose
 ### Commands
 
 #### Arithmetic Operations
-```assembly
+```
 ADD R0, R1      # R0 = R0 + R1 (register addition)
 ADD R0, #5      # R0 = R0 + 5 (immediate value)
 SUB R0, R1      # R0 = R0 - R1
@@ -83,14 +83,14 @@ SET R0, R1      # R0 = R1 (register copy)
 ```
 
 #### Display Commands
-```assembly
+```
 SHOW R0         # Display register value
 SAY "Hello"     # Display text message
 SAY "Value: {R0}"  # Display text with register interpolation
 ```
 
 #### Flow Control
-```assembly
+```
 :LABEL          # Define a label
 GOTO :LABEL     # Jump to label
 IF R0 > R1 :LABEL   # Conditional jump (>, <, =, !=, <=, >=)
@@ -99,7 +99,7 @@ CLR             # Clear top redstone block to be able to reuse save later
 ```
 
 #### Stack Operations
-```assembly
+```
 TAG :LABEL      # Mark destination for stack operations
 SLF             # Mark current position for stack operations
 CALL            # Call subroutine/function (uses stack)
@@ -107,13 +107,13 @@ RET             # Return from subroutine/function
 ```
 
 #### Utility Commands
-```assembly
+```
 VAR myVar       # Create a new variable
 ```
 
 ### Example Program
 
-```assembly
+```
 # Calculate 3^6 using recursive multiplication
 SAY "Starting exponential calculations"
 SET R0, #3
