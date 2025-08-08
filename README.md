@@ -1,5 +1,7 @@
 # Assembly to Minecraft Command Block Compiler
 
+[![Stargazers over time](https://starchart.cc/Bowser04/Assembly-to-Minecraft-Command-Block-Compiler.svg)](https://starchart.cc/Bowser04/Assembly-to-Minecraft-Command-Block-Compiler)
+
 > **⚠️ Development Status**: This project is currently under active development. Features and syntax may change.
 
 A Python-based compiler that converts custom assembly language into Minecraft command blocks and exports them as WorldEdit schematics.
