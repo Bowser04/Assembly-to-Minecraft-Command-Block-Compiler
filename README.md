@@ -26,7 +26,7 @@ pip install matplotlib numpy mcschematic
 ### File Structure
 ```
 Assembly-to-Minecraft-Command-Block-Compiler
-├── compiler.py      # Main compiler with CLI
+├── asm_compiler.py  # Main compiler with CLI
 ├── component.py     # Core components and utilities
 ├── exponential.asm  # Example assembly program
 └── README.md        # This file
@@ -38,19 +38,19 @@ Assembly-to-Minecraft-Command-Block-Compiler
 
 ```bash
 # Basic compilation
-python compiler.py input.asm
+python asm_compiler.py input.asm
 
 # Specify output file
-python compiler.py input.asm -o my_output.schem
+python asm_compiler.py input.asm -o my_output.schem
 
 # Custom stack and register sizes
-python compiler.py input.asm -s 20 -r 16
+python asm_compiler.py input.asm -s 20 -r 16
 
 # Display command blocks after compilation
-python compiler.py input.asm --display
+python asm_compiler.py input.asm --display
 
 # Verbose output
-python compiler.py input.asm --verbose
+python asm_compiler.py input.asm --verbose
 ```
 
 ### Arguments
@@ -196,3 +196,8 @@ Exceptions:
 ## License
 
 This project is open source. Feel free to modify, fork and distribute.
+
+## Emulator
+
+An in-repo emulator (`emulator.py`) lets you run and debug assembly code quickly without generating command blocks.
+
