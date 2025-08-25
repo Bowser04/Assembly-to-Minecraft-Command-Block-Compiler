@@ -1,6 +1,6 @@
 SAY "Starting exponential calculations"
 SET R0, #3
-SET R1, #6
+SET R1, #10
 SAY "Result of {R0}^{R1} is :"
 TAG :POWER_FUNC
 SLF

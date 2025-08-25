@@ -5,9 +5,10 @@ from mcschematic import MCSchematic
 import mcschematic
 
 class CommandBlock:
-    def __init__(self, command, command_type="chain"):
+    def __init__(self, command, command_type="chain", orientation="south"):
         self.command = command
         self.type = command_type
+        self.orientation = orientation  # e.g., "south", "north", etc.
 
 def display_command_block(command_block_matrix):
     '''Displays the command block matrix 2d on a plot.'''
@@ -42,7 +43,10 @@ def display_command_block(command_block_matrix):
         for j in range(cols):
             if command_block_matrix[i][j] is not None:
                 # Get only the first word of the command
-                first_word = command_block_matrix[i][j].command.split()[0]
+                if command_block_matrix[i][j].command != "":
+                    first_word = command_block_matrix[i][j].command.split()[0]
+                else:
+                    first_word = "rotate"
                 ax.text(j, i, first_word.replace("/", ""),
                         ha='center', va='center', fontsize=8, color='black')
     
@@ -91,8 +95,8 @@ def memory_setup(stack_size=3):
     index += stack_size
     command_surface[1][index] = CommandBlock("execute at @e[type=armor_stand,tag=temp_destination] run setblock ~ ~ ~ minecraft:redstone_block")
     command_surface[1][index+1] = CommandBlock("execute at @e[type=armor_stand,tag=temp_destination] run setblock ~ ~ ~ minecraft:air")
-    command_surface[1][index+2] = CommandBlock("/tellraw @a {\"text\":\"Index Pile: \",\"color\":\"gold\",\"extra\":[{\"score\":{\"name\":\"#currentPileIndex\",\"objective\":\"pileIndex\"},\"color\":\"aqua\"}]}")
-    index += 3
+    #command_surface[1][index+2] = CommandBlock("/tellraw @a {\"text\":\"Index Pile: \",\"color\":\"gold\",\"extra\":[{\"score\":{\"name\":\"#currentPileIndex\",\"objective\":\"pileIndex\"},\"color\":\"aqua\"}]}")
+    index += 3-1
 
     #### initialize regex remove pile
     command_surface[2][0] = CommandBlock("setblock ~ ~1 ~ minecraft:air", "")
@@ -103,8 +107,8 @@ def memory_setup(stack_size=3):
     command_surface[2][index] = CommandBlock("/scoreboard players remove #currentPileIndex pileIndex 1")
     command_surface[2][index+1] = CommandBlock("execute at @e[type=armor_stand,tag=temp_origin] run setblock ~ ~ ~ minecraft:redstone_block")
     command_surface[2][index+2] = CommandBlock("execute at @e[type=armor_stand,tag=temp_origin] run setblock ~ ~ ~ minecraft:air")
-    command_surface[2][index+3] = CommandBlock("/tellraw @a {\"text\":\"Index Pile: \",\"color\":\"gold\",\"extra\":[{\"score\":{\"name\":\"#currentPileIndex\",\"objective\":\"pileIndex\"},\"color\":\"aqua\"}]}")
-    index += 4
+    #command_surface[2][index+3] = CommandBlock("/tellraw @a {\"text\":\"Index Pile: \",\"color\":\"gold\",\"extra\":[{\"score\":{\"name\":\"#currentPileIndex\",\"objective\":\"pileIndex\"},\"color\":\"aqua\"}]}")
+    index += 4-1
     return command_surface
 
 def export_to_schematic(command_block_matrix, filename="command_blocks.schem"):
@@ -119,17 +123,18 @@ def export_to_schematic(command_block_matrix, filename="command_blocks.schem"):
     for i in range(rows):
         for j in range(cols):
             if command_block_matrix[i][j] is not None:
+                command_block = command_block_matrix[i][j]
                 # Determine block type (first block is impulse, rest are chain)
-                if command_block_matrix[i][j].type == "":
+                if command_block.type == "":
                     block_type = "minecraft:command_block"
                     auto = 0
-                elif command_block_matrix[i][j].type == "chain":
+                elif command_block.type == "chain":
                     block_type = "minecraft:chain_command_block"
                     auto = 1
                 
                 # Set command block at position with proper NBT data
-                command = command_block_matrix[i][j].command.replace("'", "\\'")
-                block_string = f"{block_type}[facing=south]{{Command:'{command}',auto:{auto},UpdateLastExecution:0b}}"
+                command = command_block.command.replace("'", "\\'")
+                block_string = f"{block_type}[facing={command_block.orientation}]{{Command:'{command}',auto:{auto},UpdateLastExecution:0b}}"
 
                 schem.setBlock((i, 0, j), block_string)
 
