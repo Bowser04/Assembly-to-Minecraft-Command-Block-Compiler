@@ -1,3 +1,4 @@
+import time
 class Emulator:
     def __init__(self, reg_size):
         self.REGISTERS = {f"R{i}": 0 for i in range(reg_size)}
@@ -17,40 +18,46 @@ class Emulator:
 
     def execute_line(self, line):
         #print(f"Executing line {self.line}: {line.strip()}")
-        if line.startswith("ADD"):
-            self.handle_add(line)
-            self.line += 1
-        elif line.startswith("SUB"):
-            self.handle_sub(line)
-            self.line += 1
-        elif line.startswith("MUL"):
-            self.handle_mul(line)
-            self.line += 1
-        elif line.startswith("DIV"):
-            self.handle_div(line)
-            self.line += 1
-        elif line.startswith("SET"):
-            self.handle_set(line)
-            self.line += 1
-        elif line.startswith("SAY"):
-            self.handle_say(line)
-            self.line += 1
-        elif line.startswith("GOTO"):
-            self.handle_goto(line)
-        elif line.startswith("TAG"):
-            self.handle_tag(line)
-            self.line += 1
-        elif line.startswith("SLF"):
-            self.handle_slf(line)
-            self.line += 1
-        elif line.startswith("CALL"):
-            self.handle_call(line)
-        elif line.startswith("RET"):
-            self.handle_ret(line)
-        elif line.startswith("IF"):
-            self.handle_if(line)
-        else:
-            self.end=True
+        match line.split(" ")[0]:
+            case "ADD":
+                self.handle_add(line)
+                self.line += 1
+            case "SUB":
+                self.handle_sub(line)
+                self.line += 1
+            case "MUL":
+                self.handle_mul(line)
+                self.line += 1
+            case "DIV":
+                self.handle_div(line)
+                self.line += 1
+            case "SET":
+                self.handle_set(line)
+                self.line += 1
+            case "SAY":
+                self.handle_say(line)
+                self.line += 1
+            case "GOTO":
+                time.sleep(1/20)
+                self.handle_goto(line)
+            case "TAG":
+                self.handle_tag(line)
+                self.line += 1
+            case "SLF":
+                self.handle_slf(line)
+                self.line += 1
+            case "CALL":
+                time.sleep(1/20)
+                self.handle_call(line)
+            case "RET":
+                time.sleep(1/20)
+                self.handle_ret(line)
+            case "IF":
+                time.sleep(2/20)
+                self.handle_if(line)
+            case _:
+                self.end=True
+                
     def find_labels(self, script):
         for i, line in enumerate(script):
             if line.startswith(":"):
@@ -158,7 +165,18 @@ class Emulator:
             else:
                 raise AssertionError("CLR not found after ELSE")
 
-if __name__ == "__main__":
-    emulator = Emulator(8)
-    script = open("exponential.asm", "r").read()
+import argparse
+
+def main():
+    parser = argparse.ArgumentParser(description="Assembly Emulator")
+    parser.add_argument("--input", required=True, help="Input .asm file")
+    parser.add_argument("--registers", type=int, default=8, help="Number of registers")
+    args = parser.parse_args()
+
+    emulator = Emulator(args.registers)
+    with open(args.input, "r") as f:
+        script = f.read()
     emulator.execute_script(script)
+
+if __name__ == "__main__":
+    main()
