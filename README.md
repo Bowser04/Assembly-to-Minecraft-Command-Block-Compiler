@@ -4,197 +4,142 @@
 
 > **⚠️ Development Status**: This project is currently under active development. Features and syntax may change.
 
-A Python-based compiler that converts custom assembly language into Minecraft command blocks and exports them as WorldEdit schematics.
+A Python-based toolkit for compiling custom assembly language into Minecraft command blocks, now featuring a modular precompiler and emulator with CLI support.
 
 ## Features
 
-- **Custom Assembly Language**: Support for arithmetic operations, flow control, and memory management
-- **Command Line Interface**: Easy-to-use CLI with multiple configuration options  
-- **Visual Output**: Display generated command block layouts using matplotlib
-- **WorldEdit Integration**: Export directly to `.schem` files for use in Minecraft
-- **Stack Management**: Built-in stack operations with configurable size
-- **Register System**: Configurable number of registers for calculations
+- **Custom Assembly Language**: Arithmetic, flow control, memory management
+- **Precompiler**: Converts `.sasm` scripts to `.asm` format for advanced macro and control flow support
+- **Emulator**: Simulates assembly execution in Python for rapid testing
+- **Command Line Interface**: Both precompiler and emulator are now CLI tools
+- **WorldEdit Integration**: Export to `.schem` files for Minecraft
+- **Stack & Register System**: Configurable stack/register sizes
 
 ## Installation
-
-### Prerequisites
 
 ```bash
 pip install matplotlib numpy mcschematic
 ```
 
-### File Structure
+## File Structure
+
 ```
 Assembly-to-Minecraft-Command-Block-Compiler
-├── asm_compiler.py  # Main compiler with CLI
-├── component.py     # Core components and utilities
-├── exponential.asm  # Example assembly program
-└── README.md        # This file
+├── asm_compiler.py      # Main compiler
+├── asm_precompiler.py   # Precompiler
+├── emulator.py          # Emulator
+├── exponential.sasm     # Example source (precompiled)
+├── exponential.asm      # Example output (compiled)
+├── README.md            # This file
 ```
 
-## Usage
+## Precompiler Usage
 
-### Command Line Interface
+
+The precompiler transforms `.sasm` files into `.asm` files, expanding macros and control flow. It is now implemented as a class with CLI arguments:
+
+### CLI Arguments
+
+- `--input`: Source `.sasm` file (required)
+- `--output`: Destination `.asm` file (required)
+- `--registers`: Number of registers for the emulator (optional, default: 10)
+- `--emulate`: Run the emulator after precompiling (optional)
+
+### Example CLI Usage
 
 ```bash
-# Basic compilation
-python asm_compiler.py input.asm
-
-# Specify output file
-python asm_compiler.py input.asm -o my_output.schem
-
-# Custom stack and register sizes
-python asm_compiler.py input.asm -s 20 -r 16
-
-# Display command blocks after compilation
-python asm_compiler.py input.asm --display
-
-# Verbose output
-python asm_compiler.py input.asm --verbose
+python asm_precompiler.py --input exponential.sasm --output temp.asm --registers 10 --emulate
 ```
 
-### Arguments
+## Emulator Usage
 
-| Argument | Short | Description | Default |
-|----------|--------|-------------|---------|
-| `input` | - | Input assembly file (.asm) | Required |
-| `--output` | `-o` | Output schematic file | `command_blocks.schem` |
-| `--stack-size` | `-s` | Stack size for memory setup | 15 |
-| `--register-size` | `-r` | Number of registers to create | 8 |
-| `--display` | - | Display command blocks after compilation | False |
-| `--verbose` | `-v` | Enable verbose output | False |
 
-## Assembly Language Reference
+The emulator simulates the execution of `.asm` files. It is now implemented as a class with CLI arguments:
 
-### Registers
-- `R0` to `R7` (default) - General purpose registers
-- Custom register count configurable via `-r` flag
+### CLI Arguments
+
+- `--input`: Source `.asm` file (required)
+- `--registers`: Number of registers (optional, default: 8)
+
+### Example CLI Usage
+
+```bash
+python emulator.py --input temp.asm --registers 10
+```
+
+## Example Workflow
+
+1. **Precompile**: Convert your `.sasm` to `.asm`
+   ```bash
+   python asm_precompiler.py --input exponential.sasm --output temp.asm --registers 10
+   ```
+2. **Emulate**: Run the `.asm` file in the emulator
+   ```bash
+   python emulator.py --input temp.asm --registers 10
+   ```
+3. **Compile**: Use `asm_compiler.py` to generate Minecraft schematics
+   ```bash
+   python asm_compiler.py temp.asm -o output.schem
+   ```
+
+## Example `.sasm` and `.asm` Files
+
+See `exponential.sasm` and `exponential.asm` for sample scripts.
+
+---
+
+## Custom Assembly Language Syntax
+
+Your `.sasm` source files use a custom assembly language for arithmetic, flow control, and memory operations. Below are the main commands and their usage in `.sasm` files:
+
+### Registers & Values
+- Registers are named `R0`, `R1`, ..., `Rn`.
+- Immediate values are prefixed with `#` (e.g., `#10`).
 
 ### Commands
 
-#### Arithmetic Operations
-```
-ADD R0, R1      # R0 = R0 + R1 (register addition)
-ADD R0, #5      # R0 = R0 + 5 (immediate value)
-SUB R0, R1      # R0 = R0 - R1
-SUB R0, #3      # R0 = R0 - 3
-MUL R0, R1      # R0 = R0 * R1 (registers only)
-DIV R0, R1      # R0 = R0 / R1 (registers only)
-SET R0, #10     # R0 = 10 (immediate value)
-SET R0, R1      # R0 = R1 (register copy)
-```
+| Command      | Syntax                              | Description                                 |
+|------------- |-------------------------------------|---------------------------------------------|
+| SET          | SET R0, #5                          | Set register R0 to value 5                  |
+| ADD          | ADD R0, #2 / ADD R0, R1             | Add value/register to R0                    |
+| SUB          | SUB R0, #1 / SUB R0, R1             | Subtract value/register from R0             |
+| MUL          | MUL R0, R1                          | Multiply R0 by register                     |
+| DIV          | DIV R0, R1                          | Integer divide R0 by register               |
+| SAY          | SAY "text {R0}"                     | Print text, `{R0}` replaced by register     |
+| CALL         | CALL :LABEL                         | Call a function at label                    |
+| RET          | RET                                 | Return from function                        |
+| IF           | IF R0 = R1 :LABEL                   | Conditional jump to label                   |
+| GOTO         | GOTO :LABEL                         | Unconditional jump to label                 |
+| :LABEL       | :LABEL                              | Define a label                              |
+| --           | -- comment                          | Line comment                                |
 
-#### Display Commands
-```
-SHOW R0         # Display register value
-SAY "Hello"     # Display text message
-SAY "Value: {R0}"  # Display text with register interpolation
-```
+### Example
 
-#### Flow Control
-```
-:LABEL          # Define a label
-GOTO :LABEL     # Jump to label
-IF R0 > R1 :LABEL   # Conditional jump (>, <, =, !=, <=, >=)
-ELSE            # Execute if previous IF condition was false
-CLR             # Clear top redstone block to be able to reuse save later
-```
-
-#### Stack Operations
-```
-TAG :LABEL      # Mark destination for stack operations
-SLF             # Mark current position for stack operations
-CALL            # Call subroutine/function (uses stack)
-RET             # Return from subroutine/function
-```
-
-#### Utility Commands
-```
-VAR myVar       # Create a new variable
-```
-
-### Example Program
-
-```
-# Calculate 3^6 using recursive multiplication
+```sasm
 SAY "Starting exponential calculations"
 SET R0, #3
-SET R1, #6
-SAY "Result of {R0}^{R1} is:"
-TAG :POWER_FUNC
-SLF
-CALL
+SET R1, #10
+CALL :POWER_FUNC
 SAY "{R0}"
-
 :POWER_FUNC
-SET R2 R0
-SUB R1, #1
-SET R3 #0
-GOTO :POWER_LOOP
-
+   SET R2 R0
+   SUB R1, #1
+   SET R3 #0
+   GOTO :POWER_LOOP
 :POWER_LOOP
-MUL R2, R0
-SUB R1, #1
-IF R1 = R3 :POWER_RETURN
-ELSE
-CLR
-GOTO :POWER_LOOP
-
+   MUL R2, R0
+   SUB R1, #1
+   IF R1 = R3 :POWER_RETURN
+   GOTO :POWER_LOOP
 :POWER_RETURN
-SET R0, R2
-RET
+   SET R0, R2
+   RET
 ```
 
-## Technical Details
-
-### Command Block Generation
-- **Impulse blocks**: Used for initial commands (empty type parameter)
-- **Chain blocks**: Used for sequential execution (type="chain")
-- **Conditional execution**: Generated using Minecraft's `execute` command
-- **Redstone activation**: Automatic block placement for flow control
-
-### Memory Management
-- **Scoreboard objectives**: Used for register storage
-- **Armor stands**: Used for position tracking in stack operations
-- **Dynamic sizing**: Automatic grid expansion when needed
-
-### Export Format
-- **WorldEdit schematics**: Compatible with WorldEdit plugin
-- **Minecraft version**: Targets 1.18.2
-- **Block positioning**: Maintains spatial relationships for proper execution
-
-## Limitations
-
-- MUL and DIV commands don't support immediate values (# prefix)
-- Stack size is limited by block organization
-- GOTO, IF and CALL are slow due to redstone activation (1 tick)
-
-## Development
-
-### Project Structure
-- `AssemblerCompiler` class: Main compilation logic
-- `CommandBlock` class: Represents individual command blocks
-- `memory_setup()`: Initializes the command surface and stack
-- `export_to_schematic()`: Handles WorldEdit schematic generation
-
-### Adding New Commands
-1. Add command name to `self.EX` list in `AssemblerCompiler.__init__()`
-2. Implement command logic in `compile_line()` method
-3. Update this README with command documentation
-
-## Contributing
-
-When contributing:
-1. Follow existing code style and structure
-2. Add appropriate error handling
-3. Update documentation for new features
-4. Test with sample assembly programs
-
-Exceptions:
-- If you want to reorganize/change structure of the code, ask me for agreement
+---
 
 ## License
-
+MIT
 This project is open source. Feel free to modify, fork and distribute.
 
 ## Emulator
