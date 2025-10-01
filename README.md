@@ -139,14 +139,10 @@ SAY "{R0}"
 ---
 
 ## License
-
-<<<<<<< Updated upstream
+MIT
 This project is open source. Feel free to modify, fork and distribute.
 
 ## Emulator
 
 An in-repo emulator (`emulator.py`) lets you run and debug assembly code quickly without generating command blocks.
 
-=======
-MIT
->>>>>>> Stashed changes
