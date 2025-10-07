@@ -51,17 +51,21 @@ class AssemblerCompiler:
             
             if line.split()[0] in self.EX or line.startswith(":"):
                 w += mod
+            else:
+                print(f"Warning: Unknown command '{line}'")
 
-            if z > len(command_surface)-2:
+            if z > len(command_surface)-1:
                 component.add_line(command_surface)
 
-            if (len(command_surface[z]) <= w+1 and mod == 1) or (len(command_surface[z]) <= -w-1 and mod == -1):
+            if len(command_surface[z]) <= w+1 or w < 0:
                 mod = -mod
                 w += mod
                 z += 1
+            print(f"Current position after label check: ({z}, {w})")
 
     def compile_line(self, line, command_surface, x, y, chained, orientation):
         """Compile a single line of assembly code."""
+        #match line.split(" ")[0]
         if line.startswith("ADD"):
             parts = line.split()
             if parts[2].startswith("#"):
@@ -226,6 +230,8 @@ class AssemblerCompiler:
                 x-=mod
                 y+=1
                 mod = -mod
+        if len(command_surface)-1 < y:
+            component.add_line(command_surface)
         print(f"Predicted position: ({x}, {y})")
         return y, x
 
@@ -254,7 +260,7 @@ class AssemblerCompiler:
             x += mod
 
             # Handle line wrapping
-            if len(command_surface[y]) <= x+1 or x < 0:
+            if len(command_surface[y]) <= x+1 or x < 1:
                 a, b = x, y
                 x -= mod
                 mod = -mod

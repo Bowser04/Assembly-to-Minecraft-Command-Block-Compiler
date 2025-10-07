@@ -1,19 +1,23 @@
 import time
 class Emulator:
-    def __init__(self, reg_size):
+    def __init__(self, reg_size, minecraft_tick=False):
         self.REGISTERS = {f"R{i}": 0 for i in range(reg_size)}
+        self.VARIABLE={}
         self.STACK = []
         self.line = 0
         self.end = False
         self.labels = {}
         self.script = None
         self.target = None
+        self.minecraft_tick = minecraft_tick
 
     def execute_script(self, script):
         script = script.splitlines()
         self.find_labels(script)
         self.script = script
         while not self.end:
+            if self.line >= len(script):
+                break
             self.execute_line(script[self.line])
 
     def execute_line(self, line):
@@ -38,7 +42,8 @@ class Emulator:
                 self.handle_say(line)
                 self.line += 1
             case "GOTO":
-                time.sleep(1/20)
+                if self.minecraft_tick:
+                    time.sleep(1/20)
                 self.handle_goto(line)
             case "TAG":
                 self.handle_tag(line)
@@ -47,16 +52,25 @@ class Emulator:
                 self.handle_slf(line)
                 self.line += 1
             case "CALL":
-                time.sleep(1/20)
+                if self.minecraft_tick:
+                    time.sleep(1/20)
                 self.handle_call(line)
             case "RET":
-                time.sleep(1/20)
+                if self.minecraft_tick:
+                    time.sleep(1/20)
                 self.handle_ret(line)
             case "IF":
-                time.sleep(2/20)
+                if self.minecraft_tick:
+                    time.sleep(2/20)
                 self.handle_if(line)
+            case "VAR":
+                self.handle_var(line)
+                self.line +=1
             case _:
-                self.end=True
+                if line.startswith(":"):
+                    self.end=True
+                else:
+                    AssertionError(f"Unknown command: {line} at line {self.line}")
                 
     def find_labels(self, script):
         for i, line in enumerate(script):
@@ -66,40 +80,56 @@ class Emulator:
                 #print(f"Found label '{label}' at line {i}")
 
     def handle_add(self, line):
-        _, reg1, value = line.split()
-        reg1 = reg1.replace(",", "")
+        _, var, value = line.split()
+        var = var.replace(",", "")
+        storage = self.REGISTERS if var.startswith("R") else self.VARIABLE
         if value.startswith("R"):
-            self.REGISTERS[reg1] += self.REGISTERS[value]
+            storage[var] += self.REGISTERS[value]
+        elif value.startswith("#"):
+            storage[var] += int(value.replace("#", ""))
         else:
-            self.REGISTERS[reg1] += int(value.replace("#", ""))
+            storage[var] += self.VARIABLE[value]
     def handle_sub(self, line):
-        _, reg1, value = line.split()
-        reg1 = reg1.replace(",", "")
+        _, var, value = line.split()
+        var = var.replace(",", "")
+        storage = self.REGISTERS if var.startswith("R") else self.VARIABLE
         if value.startswith("R"):
-            self.REGISTERS[reg1] -= self.REGISTERS[value]
+            storage[var] -= self.REGISTERS[value]
+        elif value.startswith("#"):
+            storage[var] -= int(value.replace("#", ""))
         else:
-            self.REGISTERS[reg1] -= int(value.replace("#", ""))
+            storage[var] -= self.VARIABLE[value]
     def handle_mul(self, line):
-        _, reg1, value = line.split()
-        reg1 = reg1.replace(",", "")
+        _, var, value = line.split()
+        var = var.replace(",", "")
+        storage = self.REGISTERS if var.startswith("R") else self.VARIABLE
         if value.startswith("R"):
-            self.REGISTERS[reg1] *= self.REGISTERS[value]
+            storage[var] *= self.REGISTERS[value]
+        elif value.startswith("#"):
+            storage[var] *= int(value.replace("#", ""))
         else:
-            self.REGISTERS[reg1] *= int(value.replace("#", ""))
+            storage[var] *= self.VARIABLE[value]
     def handle_div(self, line):
-        _, reg1, value = line.split()
-        reg1 = reg1.replace(",", "")
+        _, var, value = line.split()
+        storage = self.REGISTERS if var.startswith("R") else self.VARIABLE
+        var = var.replace(",", "")
         if value.startswith("R"):
-            self.REGISTERS[reg1] //= self.REGISTERS[value]
+            storage[var] //= self.REGISTERS[value]
+        elif value.startswith("#"):
+            storage[var] //= int(value.replace("#", ""))
         else:
-            self.REGISTERS[reg1] //= int(value.replace("#", ""))
+            storage[var] //= self.VARIABLE[value]
     def handle_set(self, line):
-        _, reg, value = line.split()
-        reg = reg.replace(",", "")
+        _, var, value = line.split()
+        var = var.replace(",", "")
+        storage = self.REGISTERS if var.startswith("R") else self.VARIABLE
         if value.startswith("R"):
-            self.REGISTERS[reg] = self.REGISTERS[value]
+            storage[var] = self.REGISTERS[value]
+        elif value.startswith("#"):
+            storage[var] = int(value.replace("#", ""))
         else:
-            self.REGISTERS[reg] = int(value.replace("#", ""))
+            storage[var] = self.VARIABLE[value]
+            
     def handle_say(self, line):
         text = line.split('"')[1]
         text = text.replace("{", "ùVAR:").replace("}", "ù").split("ù")
@@ -164,6 +194,10 @@ class Emulator:
                 raise AssertionError("ELSE not found after IF")
             else:
                 raise AssertionError("CLR not found after ELSE")
+    def handle_var(self,line):
+        _, var = line.split()
+        self.VARIABLE[var] = None
+        
 
 import argparse
 

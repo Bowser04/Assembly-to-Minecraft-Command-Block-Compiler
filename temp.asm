@@ -1,3 +1,4 @@
+VAR SYS.OPR.TEMP
 SAY "Starting exponential calculations"
 SET R0, #3
 SET R1, #10

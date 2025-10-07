@@ -1,0 +1,155 @@
+VAR SYS.OPR.TEMP
+SAY "=== Complex Math Calculator ==="
+SAY ""
+GOTO :TEST1
+:TEST1
+SAY "--- Fibonacci Sequence ---"
+SET R0, #0
+SET R1, #1
+SET R2, #0
+SET R7, #10
+GOTO :FIB_LOOP
+:FIB_LOOP
+SAY "Fib({R2}) = {R0}"
+SET R3, R0
+ADD R3, R1
+SET R0, R1
+SET R1, R3
+ADD R2, #1
+IF R2 = R7 :FIB_DONE
+ELSE
+CLR
+GOTO :FIB_LOOP
+:FIB_DONE
+GOTO :TEST2
+SAY ""
+:TEST2
+SAY "--- Factorial Calculation ---"
+SET R0, #1
+SET R1, #6
+SET R5, #6
+GOTO :FACT_LOOP
+:FACT_LOOP
+SET R3, #0
+IF R1 = R3 :FACT_DONE
+ELSE
+CLR
+MUL R0, R1
+SUB R1, #1
+GOTO :FACT_LOOP
+:FACT_DONE
+SAY "Factorial of {R5} = {R0}"
+GOTO :TEST3
+SAY ""
+:TEST3
+SAY "--- Power Calculation ---"
+SET R0, #2
+SET R1, #8
+TAG :POWER
+SLF
+CALL
+SAY "2 ^ 8 = {R0}"
+GOTO :TEST4
+SAY ""
+:TEST4
+SET R0, #3
+SET R1, #5
+TAG :POWER
+SLF
+CALL
+SAY "3 ^ 5 = {R0}"
+GOTO :TEST5
+SAY ""
+:TEST5
+SAY "--- Sum of Numbers ---"
+SET R0, #0
+SET R1, #1
+SET R2, #100
+GOTO :SUM_LOOP
+:SUM_LOOP
+ADD R0, R1
+ADD R1, #1
+IF R1 = R2 :SUM_DONE_CHECK
+ELSE
+CLR
+GOTO :SUM_LOOP
+:SUM_DONE_CHECK
+ADD R0, R1
+GOTO :SUM_DONE
+:SUM_DONE
+SAY "Sum of 1 to 100 = {R0}"
+GOTO :TEST6
+SAY ""
+:TEST6
+SAY "--- Multiplication Test ---"
+SET R0, #7
+SET R1, #13
+TAG :MULTIPLY
+SLF
+CALL
+SAY "7 * 13 = {R0}"
+GOTO :TEST6B
+SAY ""
+:TEST6B
+SAY "--- Optimized Sum Formula ---"
+SET R0, #100
+SET R1, R0
+ADD R1, #1
+MUL R0, R1
+SET R1, #2
+DIV R0, R1
+SAY "Sum of 1 to 100 (optimized) = {R0}"
+GOTO :TEST7
+SAY ""
+:TEST7
+SAY "--- Countdown Test ---"
+SET R0, #20
+GOTO :COUNTDOWN
+:COUNTDOWN
+SAY "Count: {R0}"
+SUB R0, #1
+SET R3, #0
+IF R0 = R3 :COUNTDOWN_DONE
+ELSE
+CLR
+GOTO :COUNTDOWN
+:COUNTDOWN_DONE
+SAY ""
+SAY "=== All tests completed! ==="
+GOTO :END
+:POWER
+SET R4, R0
+SET R5, R1
+SET R0, #1
+SET R6, #0
+IF R5 = R6 :POWER_RET
+ELSE
+CLR
+GOTO :POWER_LOOP
+:POWER_LOOP
+MUL R0, R4
+SUB R5, #1
+SET R6, #0
+IF R5 = R6 :POWER_RET
+ELSE
+CLR
+GOTO :POWER_LOOP
+:POWER_RET
+RET
+:MULTIPLY
+SET R4, R0
+SET R5, R1
+SET R0, #0
+GOTO :MUL_LOOP
+:MUL_LOOP
+SET R6, #0
+IF R5 = R6 :MUL_RET
+ELSE
+CLR
+ADD R0, R4
+SUB R5, #1
+GOTO :MUL_LOOP
+:MUL_RET
+RET
+:END
+SAY "All test programs completed!"
