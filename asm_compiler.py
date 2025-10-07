@@ -61,7 +61,6 @@ class AssemblerCompiler:
                 mod = -mod
                 w += mod
                 z += 1
-            print(f"Current position after label check: ({z}, {w})")
 
     def compile_line(self, line, command_surface, x, y, chained, orientation):
         """Compile a single line of assembly code."""
