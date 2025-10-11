@@ -39,48 +39,93 @@ class AssemblerCompiler:
             
         return command_surface, x, y
 
+    def advance_position(self, x, y, mod, command_surface):
+        """
+        Advance to the next position in the command surface.
+        Handles line wrapping and ensures enough rows exist.
+        
+        Args:
+            x: Current x position
+            y: Current y position
+            mod: Current direction (1 = right, -1 = left)
+            command_surface: The 2D grid of command blocks
+        
+        Returns:
+            tuple: (new_x, new_y, new_mod, new_orientation, wrap_pos)
+        """
+        x += mod
+        orientation = "south" if mod == 1 else "north"
+        
+        # Ensure we have enough rows
+        if y > len(command_surface) - 1:
+            component.add_line(command_surface)
+        
+        # Check if we need to wrap to next line
+        if len(command_surface[y]) <= x + 1 or x < 1:
+            # Store position for rotation blocks (this is where the turn happens)
+            turn_x = x
+            turn_y = y
+            
+            # Move to next line
+            y += 1             # Move to next row
+            mod = -mod         # Reverse direction
+            orientation = "south" if mod == 1 else "north"
+            
+            # Start at the beginning of new direction
+            # The x position stays at turn_x (where the rotation block is)
+            # Don't advance x here - we'll place rotation blocks at turn_x
+            
+            # Ensure new row exists
+            while y >= len(command_surface):
+                component.add_line(command_surface)
+            
+            return turn_x, y, mod, orientation, (turn_x, turn_y)
+        
+        return x, y, mod, orientation, None
+
     def find_labels(self, script, command_surface, x, y):
         """First pass: find all labels and their positions."""
         w, z = x, y
+        print(y)
         mod = 1
+        
         for line in script:
+            if not line.strip():  # Skip empty lines
+                continue
+                
             if line.startswith(":"):
                 label = line.split(":")[1].strip()
                 self.goto[label] = (z, w)
                 print(f"Label {label} found at ({z}, {w})")
             
             if line.split()[0] in self.EX or line.startswith(":"):
-                w += mod
+                # Advance position
+                result = self.advance_position(w, z, mod, command_surface)
+                w, z, mod, orientation, wrap_pos = result
+                if wrap_pos:
+                    w+=mod
             else:
                 print(f"Warning: Unknown command '{line}'")
 
-            if z > len(command_surface)-1:
-                component.add_line(command_surface)
-
-            if len(command_surface[z]) <= w+1 or w < 0:
-                mod = -mod
-                w += mod
-                z += 1
-
-    def compile_line(self, line, command_surface, x, y, chained, orientation):
+    def compile_line(self, line, command_surface, x, y, chained, orientation, line_number=None):
         """Compile a single line of assembly code."""
         #match line.split(" ")[0]
         if line.startswith("ADD"):
             parts = line.split()
             if parts[2].startswith("#"):
                 parts[2] = parts[2].split("#")[1]
-                command_surface[y][x] = component.CommandBlock(f"/scoreboard players add REG {parts[1].replace(',', '')} {parts[2].replace(',', '')}", "" if not chained else "chain",orientation=orientation)
+                command_surface[y][x] = component.CommandBlock(f"/scoreboard players add REG {parts[1].replace(',', '')} {parts[2].replace(',', '')}", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
             else:
-                command_surface[y][x] = component.CommandBlock(f"/scoreboard players operation REG {parts[1].replace(',', '')} += REG {parts[2].replace(',', '')}", "" if not chained else "chain",orientation=orientation)
+                command_surface[y][x] = component.CommandBlock(f"/scoreboard players operation REG {parts[1].replace(',', '')} += REG {parts[2].replace(',', '')}", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
             print(f"Processed ADD: {parts[1].replace(',', '')} + {parts[2].replace(',', '')}")
         
         elif line.startswith("SUB"):
             parts = line.split()
             if parts[2].startswith("#"):
                 parts[2] = parts[2].split("#")[1]
-                command_surface[y][x] = component.CommandBlock(f"/scoreboard players remove REG {parts[1].replace(',', '')} {parts[2].replace(',', '')}", "" if not chained else "chain",orientation=orientation)
+                command_surface[y][x] = component.CommandBlock(f"/scoreboard players remove REG {parts[1].replace(',', '')} {parts[2].replace(',', '')}", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
             else:
-                command_surface[y][x] = component.CommandBlock(f"/scoreboard players operation REG {parts[1].replace(',', '')} -= REG {parts[2].replace(',', '')}", "" if not chained else "chain",orientation=orientation)
+                command_surface[y][x] = component.CommandBlock(f"/scoreboard players operation REG {parts[1].replace(',', '')} -= REG {parts[2].replace(',', '')}", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
             print(f"Processed SUB: {parts[1].replace(',', '')} - {parts[2].replace(',', '')}")
         
         elif line.startswith("MUL"):
@@ -88,24 +133,24 @@ class AssemblerCompiler:
             if parts[2].startswith("#"):
                 AssertionError("MUL command does not support immediate values")
             else:
-                command_surface[y][x] = component.CommandBlock(f"/scoreboard players operation REG {parts[1].replace(',', '')} *= REG {parts[2].replace(',', '')}", "" if not chained else "chain",orientation=orientation)
+                command_surface[y][x] = component.CommandBlock(f"/scoreboard players operation REG {parts[1].replace(',', '')} *= REG {parts[2].replace(',', '')}", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
             print(f"Processed MUL: {parts[1].replace(',', '')} * {parts[2].replace(',', '')}")
         
         elif line.startswith("SHOW"):
             parts = line.split()
-            command_surface[y][x] = component.CommandBlock('/tellraw @a {"text":": ","color":"gold","extra":[{"score":{"name":"REG","objective":"'+parts[1].replace(',', '')+'"},"color":"aqua"}]}', "" if not chained else "chain",orientation=orientation)
+            command_surface[y][x] = component.CommandBlock('/tellraw @a {"text":": ","color":"gold","extra":[{"score":{"name":"REG","objective":"'+parts[1].replace(',', '')+'"},"color":"aqua"}]}', "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
             print(f"Processed SHOW: {parts[1].replace(',', '')}")
         
         elif line.startswith(":"):
             label = line.split(":")[1].strip()
-            command_surface[y][x] = component.CommandBlock(f"setblock ~ ~1 ~ minecraft:air", "",orientation=orientation)
+            command_surface[y][x] = component.CommandBlock(f"setblock ~ ~1 ~ minecraft:air", "",orientation=orientation, source_line=line_number, source_code=line)
             print(f"Label found: {label} at ({y}, {x})")
         
         elif line.startswith("GOTO"):
             label = line.split()[1].strip().replace(":", "")
             if label in self.goto:
                 target_y, target_x = self.goto[label]
-                command_surface[y][x] = component.CommandBlock(f"setblock ~{target_y-y} ~1 ~{target_x-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation)
+                command_surface[y][x] = component.CommandBlock(f"setblock ~{target_y-y} ~1 ~{target_x-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
                 print(f"GOTO found: {label} at ({target_y}, {target_x})")
             else:
                 AssertionError(f"Error: GOTO label {label} not defined")
@@ -114,48 +159,49 @@ class AssemblerCompiler:
             parts = line.split()
             if parts[2].startswith("#"):
                 parts[2] = parts[2].split("#")[1]
-                command_surface[y][x] = component.CommandBlock(f"/scoreboard players set REG {parts[1].replace(',', '')} {parts[2].replace(',', '')}", "" if not chained else "chain",orientation=orientation)
+                command_surface[y][x] = component.CommandBlock(f"/scoreboard players set REG {parts[1].replace(',', '')} {parts[2].replace(',', '')}", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
             else:
-                command_surface[y][x] = component.CommandBlock(f"/scoreboard players operation REG {parts[1].replace(',', '')} = REG {parts[2].replace(',', '')}", "" if not chained else "chain",orientation=orientation)
+                command_surface[y][x] = component.CommandBlock(f"/scoreboard players operation REG {parts[1].replace(',', '')} = REG {parts[2].replace(',', '')}", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
 
             print(f"Processed SET: {parts[1].replace(',', '')} = {parts[2].replace(',', '')}")
 
         elif line.startswith("TAG"):
             parts = line.split()
             target_y, target_x = self.goto[parts[1].replace(":", "")]
-            command_surface[y][x] = component.CommandBlock(f"execute as @e[type=armor_stand,tag=temp_destination] run tp @s ~{target_y-y} ~1 ~{target_x-x}", "" if not chained else "chain",orientation=orientation)
+            command_surface[y][x] = component.CommandBlock(f"execute as @e[type=armor_stand,tag=temp_destination] run tp @s ~{target_y-y} ~1 ~{target_x-x}", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
             print(f"TAG found: {parts[1].replace(':', '')} at ({target_y}, {target_x})")
         
         elif line.startswith("SLF"):
             target_y, target_x = self.predict_pos(x,y,2,orientation,command_surface)
-            command_surface[y][x] = component.CommandBlock(f"execute as @e[type=armor_stand,tag=temp_origin] run tp @s ~{target_y-y} ~1 ~{target_x-x}", "" if not chained else "chain",orientation=orientation)
+            command_surface[y][x] = component.CommandBlock(f"execute as @e[type=armor_stand,tag=temp_origin] run tp @s ~{target_y-y} ~1 ~{target_x-x}", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
 
         elif line.startswith("CALL"):
-            command_surface[y][x] = component.CommandBlock(f"setblock ~{1-y} ~1 ~{1-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation)
+            command_surface[y][x] = component.CommandBlock(f"setblock ~{1-y} ~1 ~{1-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
             self.temp = False
 
         elif line.startswith("RET"):
-            command_surface[y][x] = component.CommandBlock(f"setblock ~{2-y} ~1 ~{0-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation)
+            command_surface[y][x] = component.CommandBlock(f"setblock ~{2-y} ~1 ~{0-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
 
         elif line.startswith("IF"):
             parts = line.split()
             self.last_parts = parts
             op = parts[2]
             target_y, target_x = self.goto[parts[4].replace(":", "")]
-            if op == ">":
-                command_surface[y][x] = component.CommandBlock(f"execute if score REG {parts[1].replace(',', '')} > REG {parts[3].replace(',', '')} run setblock ~{target_y-y} ~1 ~{target_x-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation)
-            elif op == "<":
-                command_surface[y][x] = component.CommandBlock(f"execute if score REG {parts[1].replace(',', '')} < REG {parts[3].replace(',', '')} run setblock ~{target_y-y} ~1 ~{target_x-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation)
-            elif op == "=":
-                command_surface[y][x] = component.CommandBlock(f"execute if score REG {parts[1].replace(',', '')} = REG {parts[3].replace(',', '')} run setblock ~{target_y-y} ~1 ~{target_x-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation)
-            elif op == "!=":
-                command_surface[y][x] = component.CommandBlock(f"execute unless score REG {parts[1].replace(',', '')} = REG {parts[3].replace(',', '')} run setblock ~{target_y-y} ~1 ~{target_x-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation)
-            elif op == "<=":
-                command_surface[y][x] = component.CommandBlock(f"execute if score REG {parts[1].replace(',', '')} <= REG {parts[3].replace(',', '')} run setblock ~{target_y-y} ~1 ~{target_x-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation)
-            elif op == ">=":
-                command_surface[y][x] = component.CommandBlock(f"execute if score REG {parts[1].replace(',', '')} >= REG {parts[3].replace(',', '')} run setblock ~{target_y-y} ~1 ~{target_x-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation)
-            else:
-                AssertionError(f"Unknown operator: {op}")
+            match op:
+                case ">":
+                    command_surface[y][x] = component.CommandBlock(f"execute if score REG {parts[1].replace(',', '')} > REG {parts[3].replace(',', '')} run setblock ~{target_y-y} ~1 ~{target_x-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
+                case "<":
+                    command_surface[y][x] = component.CommandBlock(f"execute if score REG {parts[1].replace(',', '')} < REG {parts[3].replace(',', '')} run setblock ~{target_y-y} ~1 ~{target_x-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
+                case "=":
+                    command_surface[y][x] = component.CommandBlock(f"execute if score REG {parts[1].replace(',', '')} = REG {parts[3].replace(',', '')} run setblock ~{target_y-y} ~1 ~{target_x-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
+                case "!=":
+                    command_surface[y][x] = component.CommandBlock(f"execute unless score REG {parts[1].replace(',', '')} = REG {parts[3].replace(',', '')} run setblock ~{target_y-y} ~1 ~{target_x-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
+                case "<=":
+                    command_surface[y][x] = component.CommandBlock(f"execute if score REG {parts[1].replace(',', '')} <= REG {parts[3].replace(',', '')} run setblock ~{target_y-y} ~1 ~{target_x-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
+                case ">=":
+                    command_surface[y][x] = component.CommandBlock(f"execute if score REG {parts[1].replace(',', '')} >= REG {parts[3].replace(',', '')} run setblock ~{target_y-y} ~1 ~{target_x-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
+                case _:
+                    AssertionError(f"Unknown operator: {op}")
             print(f"Processed IF: {parts[1].replace(',', '')} {op} {parts[3].replace(',', '')} GOTO {parts[4].replace(':', '')}")
         
         elif line.startswith("ELSE"):
@@ -163,20 +209,20 @@ class AssemblerCompiler:
             parts = self.last_parts
             op = parts[2]
             if op == ">":
-                command_surface[y][x] = component.CommandBlock(f"execute unless score REG {parts[1].replace(',', '')} > REG {parts[3].replace(',', '')} run setblock ~{target_y-y} ~1 ~{target_x-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation)
+                command_surface[y][x] = component.CommandBlock(f"execute unless score REG {parts[1].replace(',', '')} > REG {parts[3].replace(',', '')} run setblock ~{target_y-y} ~1 ~{target_x-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
             elif op == "<":
-                command_surface[y][x] = component.CommandBlock(f"execute unless score REG {parts[1].replace(',', '')} < REG {parts[3].replace(',', '')} run setblock ~{target_y-y} ~1 ~{target_x-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation)
+                command_surface[y][x] = component.CommandBlock(f"execute unless score REG {parts[1].replace(',', '')} < REG {parts[3].replace(',', '')} run setblock ~{target_y-y} ~1 ~{target_x-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
             elif op == "=":
-                command_surface[y][x] = component.CommandBlock(f"execute unless score REG {parts[1].replace(',', '')} = REG {parts[3].replace(',', '')} run setblock ~{target_y-y} ~1 ~{target_x-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation)
+                command_surface[y][x] = component.CommandBlock(f"execute unless score REG {parts[1].replace(',', '')} = REG {parts[3].replace(',', '')} run setblock ~{target_y-y} ~1 ~{target_x-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
             elif op == "!=":
-                command_surface[y][x] = component.CommandBlock(f"execute if score REG {parts[1].replace(',', '')} = REG {parts[3].replace(',', '')} run setblock ~{target_y-y} ~1 ~{target_x-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation)
+                command_surface[y][x] = component.CommandBlock(f"execute if score REG {parts[1].replace(',', '')} = REG {parts[3].replace(',', '')} run setblock ~{target_y-y} ~1 ~{target_x-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
             elif op == "<=":
-                command_surface[y][x] = component.CommandBlock(f"execute unless score REG {parts[1].replace(',', '')} <= REG {parts[3].replace(',', '')} run setblock ~{target_y-y} ~1 ~{target_x-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation)
+                command_surface[y][x] = component.CommandBlock(f"execute unless score REG {parts[1].replace(',', '')} <= REG {parts[3].replace(',', '')} run setblock ~{target_y-y} ~1 ~{target_x-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
             elif op == ">=":
-                command_surface[y][x] = component.CommandBlock(f"execute unless score REG {parts[1].replace(',', '')} >= REG {parts[3].replace(',', '')} run setblock ~{target_y-y} ~1 ~{target_x-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation)
+                command_surface[y][x] = component.CommandBlock(f"execute unless score REG {parts[1].replace(',', '')} >= REG {parts[3].replace(',', '')} run setblock ~{target_y-y} ~1 ~{target_x-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
             self.temp = False
         elif line.startswith("CLR"):
-            command_surface[y][x] = component.CommandBlock(f"setblock ~ ~1 ~ minecraft:air", "" if not chained else "chain",orientation=orientation)
+            command_surface[y][x] = component.CommandBlock(f"setblock ~ ~1 ~ minecraft:air", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
             print(f"Processed CLR at ({y}, {x})")
         
         elif line.startswith("SAY"):
@@ -192,7 +238,7 @@ class AssemblerCompiler:
                     else:
                         command += f'{{"text":"{part}","color":"gold"}},'
                 command = command.rstrip(',') + ']'
-                command_surface[y][x] = component.CommandBlock(command, "" if not chained else "chain",orientation=orientation)
+                command_surface[y][x] = component.CommandBlock(command, "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
                 print(f"Processed SAY: {" ".join(parts[1:])}")
             else:
                 AssertionError("SAY command requires a message")
@@ -202,7 +248,7 @@ class AssemblerCompiler:
             if parts[2].startswith("#"):
                 AssertionError("DIV command does not support immediate values")
             else:
-                command_surface[y][x] = component.CommandBlock(f"/scoreboard players operation REG {parts[1].replace(',', '')} /= REG {parts[2].replace(',', '')}", "" if not chained else "chain",orientation=orientation)
+                command_surface[y][x] = component.CommandBlock(f"/scoreboard players operation REG {parts[1].replace(',', '')} /= REG {parts[2].replace(',', '')}", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
             print(f"Processed DIV: {parts[1].replace(',', '')} / {parts[2].replace(',', '')}")
         
         elif line.startswith("VAR"):
@@ -210,7 +256,7 @@ class AssemblerCompiler:
             if len(parts) != 2:
                 AssertionError("VAR command requires a variable name")
             var_name = parts[1].replace(",", "")
-            command_surface[y][x] = component.CommandBlock(f"/scoreboard objectives add {var_name} dummy", "" if not chained else "chain",orientation=orientation)
+            command_surface[y][x] = component.CommandBlock(f"/scoreboard objectives add {var_name} dummy", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
             print(f"Processed VAR: {var_name}")
         
         else:
@@ -219,19 +265,37 @@ class AssemblerCompiler:
         return True
     
 
-    def predict_pos(self, x, y, offset, orientation,command_surface):
-        """Predict the next position based on current coordinates and movement."""
+    def predict_pos(self, x, y, offset, orientation, command_surface):
+        """
+        Predict the next position based on current coordinates and movement.
+        Uses advance_position method directly for consistency.
+        
+        Args:
+            x: Current x position
+            y: Current y position
+            offset: Number of steps to move forward
+            orientation: Current direction ('south' = moving right, 'north' = moving left)
+            command_surface: The 2D grid of command blocks
+        
+        Returns:
+            tuple: (predicted_y, predicted_x)
+        """
+        # Direction: 1 = moving right (east), -1 = moving left (west)
         mod = 1 if orientation == "south" else -1
-        print(f"Current position: ({x}, {y}), Moving {'east' if mod == 1 else 'west'}")
-        for i in range(offset):
-            x+=mod
-            if len(command_surface[y]) <= x+1:
-                x-=mod
-                y+=1
-                mod = -mod
-        if len(command_surface)-1 < y:
-            component.add_line(command_surface)
-        print(f"Predicted position: ({x}, {y})")
+        
+        print(f"Predicting from ({y}, {x}), offset={offset}, direction={'→' if mod == 1 else '←'}")
+        
+        # Use advance_position for each step to ensure exact consistency
+        for step in range(offset):
+            x, y, mod, orientation, wrap_pos = self.advance_position(x, y, mod, command_surface)
+            
+            if wrap_pos:
+                x+=mod
+                print(f"  Step {step + 1}: Wrapped to new line ({y}, {x}), new direction={'→' if mod == 1 else '←'}")
+            else:
+                print(f"  Step {step + 1}: Moved to ({y}, {x})")
+        
+        print(f"Final predicted position: ({y}, {x})")
         return y, x
 
     def compile_script(self, script, output_file, stack_size=15, regex_size=8, display=False):
@@ -255,19 +319,22 @@ class AssemblerCompiler:
                 continue
                 
             # try:
-            self.compile_line(line, command_surface, x, y, chained, orientation=orientation)
-            x += mod
-
-            # Handle line wrapping
-            if len(command_surface[y]) <= x+1 or x < 1:
-                a, b = x, y
-                x -= mod
-                mod = -mod
-                orientation = "south" if mod == 1 else "north"
-                y += 1
-                print(y)
-                command_surface[b][a] = component.CommandBlock(f"",orientation="east")
-                command_surface[y][a] = component.CommandBlock(f"",orientation=orientation)
+            self.compile_line(line, command_surface, x, y, chained, orientation=orientation, line_number=index+1)
+            
+            # Advance position
+            result = self.advance_position(x, y, mod, command_surface)
+            x, y, mod, orientation, wrap_pos = result
+            
+            # Handle rotation blocks at line wrap
+            if wrap_pos:
+                turn_x, turn_y = wrap_pos
+                # Place rotation block on previous line at turn position
+                command_surface[turn_y][turn_x] = component.CommandBlock("", orientation="east")
+                # Place directional block on new line at same x position
+                command_surface[y][turn_x] = component.CommandBlock("", orientation=orientation)
+                # Now advance x by one step in the new direction
+                print(f"Line wrap at y={y}, turn_x={turn_x}")
+                x += mod
 
             # Update chaining state
             if not chained:
@@ -287,7 +354,7 @@ class AssemblerCompiler:
         # Export and display
         component.export_to_schematic(command_surface, output_file)
         if display:
-            component.display_command_block(command_surface)
+            component.display_command_block(command_surface, script_lines=script)
         
         print(f"Compilation complete. Output saved to: {output_file}")
 
