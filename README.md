@@ -8,7 +8,7 @@ A Python-based toolkit for compiling custom assembly language into Minecraft com
 
 ## Showcase Video
 
-[![Showcase Video](showcase.mp4)](showcase.mp4)
+[![Showcase Video](showcase.gif)](showcase.gif)
 
 ## Features
 
