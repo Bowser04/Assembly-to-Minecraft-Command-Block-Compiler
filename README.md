@@ -6,6 +6,10 @@
 
 A Python-based toolkit for compiling custom assembly language into Minecraft command blocks, now featuring a modular precompiler and emulator with CLI support.
 
+## Showcase Video
+
+[![Showcase Video](showcase.mp4)](showcase.mp4)
+
 ## Features
 
 - **Custom Assembly Language**: Arithmetic, flow control, memory management
