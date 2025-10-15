@@ -1,0 +1,14 @@
+END
+:POWER_FUNC
+    SUB R1, #1
+    SET R3 #0
+    SET R2 R0
+    GOTO :POWER_LOOP
+    :POWER_LOOP
+        OPR MUL R2 R2 R0
+        SUB R1, #1
+        IF R1 = R3 :POWER_RETURN
+        GOTO :POWER_LOOP
+    :POWER_RETURN
+        SET R0, R2
+        RET

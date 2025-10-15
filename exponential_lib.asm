@@ -1,0 +1,19 @@
+VAR SYS.OPR.TEMP
+RET
+:exponential_lib.POWER_FUNC
+SUB R1, #1
+SET R3 #0
+SET R2 R0
+GOTO :exponential_lib.POWER_LOOP
+:exponential_lib.POWER_LOOP
+SET SYS.OPR.TEMP R2
+MUL SYS.OPR.TEMP R0
+SET R2 SYS.OPR.TEMP
+SUB R1, #1
+IF R1 = R3 :exponential_lib.:POWER_RETURN
+ELSE
+CLR
+GOTO :exponential_lib.POWER_LOOP
+:exponential_lib.POWER_RETURN
+SET R0, R2
+RET

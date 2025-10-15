@@ -158,7 +158,7 @@ class Emulator:
         if self.target in self.labels:
             self.line = self.labels[self.target]+1
         else:
-            raise AssertionError("Label not found")
+            raise AssertionError(f"Label {self.target} not found on line :\n{line}\n list of labels: {self.labels}")
     def handle_ret(self, line):
         if self.STACK:
             self.line = self.STACK.pop()
