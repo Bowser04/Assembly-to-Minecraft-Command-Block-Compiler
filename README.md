@@ -1,6 +1,6 @@
 # Assembly to Minecraft Command Block Compiler
 
-[![Star History Chart](https://api.star-history.com/svg?repos=Bowser04/Assembly-to-Minecraft-Command-Block-Compiler&type=Date)](https://www.star-history.com/#Bowser04/Assembly-to-Minecraft-Command-Block-Compiler&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=Bowser04/Assembly-to-Minecraft-Command-Block-Compiler&type=date&legend=top-left)](https://www.star-history.com/#Bowser04/Assembly-to-Minecraft-Command-Block-Compiler&type=date&legend=top-left)
 
 > **⚠️ Development Status**: This project is currently under active development. Features and syntax may change.
 
