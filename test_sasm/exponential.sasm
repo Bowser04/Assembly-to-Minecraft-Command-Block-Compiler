@@ -1,0 +1,19 @@
+SAY "Starting exponential calculations"
+SET R0, #3
+SET R1, #10
+SAY "Result of {R0}^{R1} is :"
+CALL :POWER_FUNC
+SAY "{R0}"
+:POWER_FUNC
+    SET R2 R0
+    SUB R1, #1
+    SET R3 #0
+    GOTO :POWER_LOOP
+    :POWER_LOOP
+        MUL R2, R0
+        SUB R1, #1
+        IF R1 = R3 :POWER_RETURN
+        GOTO :POWER_LOOP
+    :POWER_RETURN
+        SET R0, R2
+        RET

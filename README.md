@@ -4,16 +4,29 @@
 
 > **⚠️ Development Status**: This project is currently under active development. Features and syntax may change.
 
-A Python-based toolkit for compiling custom assembly language into Minecraft command blocks, now featuring a modular precompiler and emulator with CLI support.
+A Python-based toolkit for compiling custom assembly language into Minecraft command blocks, featuring a modular precompiler, emulator, interactive debugger, and visual command block viewer.
+
+## Showcase Video
+
+currently broken sorry
+you can check 
+showcase.mp4 in the repo
+
+
 
 ## Features
 
-- **Custom Assembly Language**: Arithmetic, flow control, memory management
-- **Precompiler**: Converts `.sasm` scripts to `.asm` format for advanced macro and control flow support
-- **Emulator**: Simulates assembly execution in Python for rapid testing
-- **Command Line Interface**: Both precompiler and emulator are now CLI tools
-- **WorldEdit Integration**: Export to `.schem` files for Minecraft
-- **Stack & Register System**: Configurable stack/register sizes
+- **Custom Assembly Language**: Arithmetic, flow control, memory management, function calls
+- **Precompiler**: Converts `.sasm` scripts to `.asm` format with macro and control flow expansion
+- **Emulator**: Fast Python-based simulation for testing assembly code
+- **Interactive Debugger**: GUI debugger with step-by-step execution, breakpoints, and register inspection
+- **Visual Command Block Viewer**: Interactive Tkinter UI showing compiled command blocks with:
+  - Click-to-explore navigation between assembly code and command blocks
+  - Flow visualization with colored arrows (red arrows highlight abnormal flows)
+  - Syntax highlighting and line-to-block mapping
+- **WorldEdit Integration**: Export to `.schem` files for direct import into Minecraft
+- **Stack & Register System**: Configurable stack/register sizes with function call support
+- **Command Line Interface**: Full CLI support for all tools
 
 ## Installation
 
@@ -25,66 +38,137 @@ pip install matplotlib numpy mcschematic
 
 ```
 Assembly-to-Minecraft-Command-Block-Compiler
-├── asm_compiler.py      # Main compiler
-├── asm_precompiler.py   # Precompiler
-├── emulator.py          # Emulator
-├── exponential.sasm     # Example source (precompiled)
-├── exponential.asm      # Example output (compiled)
-├── README.md            # This file
+├── asm_compiler.py      # Main compiler - converts .asm to Minecraft schematics
+├── asm_precompiler.py   # Precompiler - expands .sasm macros to .asm
+├── emulator.py          # Emulator - simulates assembly execution
+├── debugger.py          # Interactive GUI debugger with step execution
+├── component.py         # Command block components and visual viewer
+├── test_asm/            # Example .asm files
+│   ├── exponential.asm
+│   ├── exponential_lib_call.asm
+│   └── libs/            # Library functions
+├── test_sasm/           # Example .sasm source files
+│   ├── exponential.sasm
+│   └── exponential_lib_call.sasm
+├── test_emu.py          # Emulator test suite
+└── README.md            # This file
 ```
 
-## Precompiler Usage
+## Usage
 
+### Compiler
 
-The precompiler transforms `.sasm` files into `.asm` files, expanding macros and control flow. It is now implemented as a class with CLI arguments:
+The main compiler converts `.asm` files into Minecraft WorldEdit schematics (`.schem`).
 
-### CLI Arguments
+#### CLI Arguments
 
+```bash
+python asm_compiler.py input.asm [options]
+```
+
+**Options:**
+- `-o, --output`: Output schematic file (default: `command_blocks.schem`)
+- `-s, --stack-size`: Stack size for memory setup (default: 15)
+- `-r, --register-size`: Number of registers to create (default: 8)
+- `--display`: Display interactive command block viewer after compilation
+- `-v, --verbose`: Enable verbose output
+
+#### Examples
+
+```bash
+# Basic compilation
+python asm_compiler.py test_asm/exponential.asm
+
+# Custom output and settings
+python asm_compiler.py test_asm/exponential.asm -o my_program.schem -s 20 -r 16
+
+# Compile and view in interactive UI
+python asm_compiler.py test_asm/exponential.asm --display
+```
+
+### Precompiler
+
+The precompiler transforms `.sasm` files into `.asm` files, expanding macros and control flow.
+
+#### CLI Arguments
+
+```bash
+python asm_precompiler.py --input source.sasm --output dest.asm [options]
+```
+
+**Options:**
 - `--input`: Source `.sasm` file (required)
 - `--output`: Destination `.asm` file (required)
-- `--registers`: Number of registers for the emulator (optional, default: 10)
-- `--emulate`: Run the emulator after precompiling (optional)
+- `--registers`: Number of registers (default: 10)
+- `--emulate`: Run the emulator after precompiling
 
-### Example CLI Usage
+#### Examples
 
 ```bash
-python asm_precompiler.py --input exponential.sasm --output temp.asm --registers 10 --emulate
+# Basic precompilation
+python asm_precompiler.py --input test_sasm/exponential.sasm --output temp.asm
+
+# Precompile and emulate
+python asm_precompiler.py --input test_sasm/exponential.sasm --output temp.asm --emulate
 ```
 
-## Emulator Usage
+### Emulator
 
+The emulator simulates assembly execution without generating command blocks.
 
-The emulator simulates the execution of `.asm` files. It is now implemented as a class with CLI arguments:
+#### CLI Arguments
 
-### CLI Arguments
+```bash
+python emulator.py --input program.asm [options]
+```
 
+**Options:**
 - `--input`: Source `.asm` file (required)
-- `--registers`: Number of registers (optional, default: 8)
+- `--registers`: Number of registers (default: 8)
 
-### Example CLI Usage
+#### Examples
 
 ```bash
-python emulator.py --input temp.asm --registers 10
+# Run emulator
+python emulator.py --input test_asm/exponential.asm --registers 10
 ```
 
-## Example Workflow
+### Debugger
 
-1. **Precompile**: Convert your `.sasm` to `.asm`
-   ```bash
-   python asm_precompiler.py --input exponential.sasm --output temp.asm --registers 10
-   ```
-2. **Emulate**: Run the `.asm` file in the emulator
-   ```bash
-   python emulator.py --input temp.asm --registers 10
-   ```
-3. **Compile**: Use `asm_compiler.py` to generate Minecraft schematics
-   ```bash
-   python asm_compiler.py temp.asm -o output.schem
-   ```
+The debugger provides an interactive GUI for step-by-step execution with breakpoints and register inspection.
 
-## Example `.sasm` and `.asm` Files
+```bash
+python debugger.py
+```
 
-See `exponential.sasm` and `exponential.asm` for sample scripts.
+Then load your `.asm` file through the GUI to:
+- Set breakpoints
+- Step through code line by line
+- Inspect register values in real-time
+- View output as it's generated
+
+## Complete Workflow Example
+
+```bash
+# 1. Write your program in .sasm format
+# 2. Precompile to .asm
+python asm_precompiler.py --input test_sasm/exponential.sasm --output temp.asm
+
+# 3. Test with emulator
+python emulator.py --input temp.asm --registers 10
+
+# 4. Debug if needed
+python debugger.py  # Load temp.asm in GUI
+
+# 5. Compile to Minecraft schematic with visual viewer
+python asm_compiler.py temp.asm -o output.schem --display
+
+# 6. Import output.schem into Minecraft using WorldEdit
+```
+
+## Example Files
+
+See the `test_sasm/` and `test_asm/` directories for sample programs demonstrating various features.
 
 ---
 
@@ -100,18 +184,29 @@ Your `.sasm` source files use a custom assembly language for arithmetic, flow co
 
 | Command      | Syntax                              | Description                                 |
 |------------- |-------------------------------------|---------------------------------------------|
-| SET          | SET R0, #5                          | Set register R0 to value 5                  |
-| ADD          | ADD R0, #2 / ADD R0, R1             | Add value/register to R0                    |
-| SUB          | SUB R0, #1 / SUB R0, R1             | Subtract value/register from R0             |
-| MUL          | MUL R0, R1                          | Multiply R0 by register                     |
-| DIV          | DIV R0, R1                          | Integer divide R0 by register               |
-| SAY          | SAY "text {R0}"                     | Print text, `{R0}` replaced by register     |
-| CALL         | CALL :LABEL                         | Call a function at label                    |
-| RET          | RET                                 | Return from function                        |
-| IF           | IF R0 = R1 :LABEL                   | Conditional jump to label                   |
-| GOTO         | GOTO :LABEL                         | Unconditional jump to label                 |
-| :LABEL       | :LABEL                              | Define a label                              |
-| --           | -- comment                          | Line comment                                |
+| **Arithmetic & Data** |                           |                                             |
+| SET          | `SET R0, #5` / `SET R0, R1`        | Set register R0 to value or another register |
+| ADD          | `ADD R0, #2` / `ADD R0, R1`        | Add value/register to R0                    |
+| SUB          | `SUB R0, #1` / `SUB R0, R1`        | Subtract value/register from R0             |
+| MUL          | `MUL R0, R1`                        | Multiply R0 by register                     |
+| DIV          | `DIV R0, R1`                        | Integer divide R0 by register               |
+| VAR          | `VAR myVar`                         | Declare a variable/objective                |
+| **Output** |                                     |                                             |
+| SAY          | `SAY "text {R0}"`                   | Print text, `{R0}` replaced by register value |
+| SHOW         | `SHOW R0`                           | Display register value                      |
+| **Control Flow** |                               |                                             |
+| :LABEL       | `:LABEL`                            | Define a label for jumps/calls              |
+| GOTO         | `GOTO :LABEL`                       | Unconditional jump to label                 |
+| IF           | `IF R0 = R1 :LABEL`                 | Conditional jump (supports =, !=, <, >, <=, >=) |
+| ELSE         | `ELSE`                              | Execute if previous IF was false            |
+| **Functions** |                                    |                                             |
+| CALL         | `CALL :FUNCTION`                    | Call a function at label (uses stack)       |
+| RET          | `RET`                               | Return from function                        |
+| TAG          | `TAG :LABEL`                        | Tag destination for return                  |
+| SLF          | `SLF`                               | Set self reference                          |
+| **Utility** |                                     |                                             |
+| CLR          | `CLR`                               | Clear current block                         |
+| --           | `-- comment`                        | Line comment (ignored)                      |
 
 ### Example
 
@@ -138,11 +233,53 @@ SAY "{R0}"
 
 ---
 
+## Visual Command Block Viewer
+
+When using the `--display` flag with the compiler, an interactive Tkinter UI opens showing:
+
+### Features
+- **Interactive Grid**: Click on command blocks to see details
+- **Assembly Code Panel**: View original assembly code side-by-side
+- **Bidirectional Navigation**: Click assembly lines to highlight corresponding blocks, or click blocks to see source code
+- **Flow Visualization**: 
+  - Brown arrows: Normal impulse block jumps
+  - Cyan arrows: Normal chain block flow
+  - **Red arrows**: Abnormal flow (pointing to chain blocks - potential issues)
+- **Block Information**: Hover/click for full command details, line numbers, and coordinates
+- **Color Coding**:
+  - Brown blocks: Impulse command blocks
+  - Green blocks: Chain command blocks
+
+This viewer helps you understand and debug your compiled command block structure before importing into Minecraft.
+
+---
+
+## Architecture
+
+The compiler uses a "snake pattern" layout for command blocks:
+- Line 1: Left → Right
+- Line 2: Right → Left (reversed)
+- Line 3: Left → Right (reversed)
+- And so on...
+
+This creates efficient execution chains while maintaining spatial locality. Rotation blocks are automatically placed at line boundaries to maintain signal flow.
+
+---
+
 ## License
+
 MIT
+
 This project is open source. Feel free to modify, fork and distribute.
 
-## Emulator
+---
 
-An in-repo emulator in experimental (`emulator.py`) lets you run and debug assembly code quickly without generating command blocks.
+## Contributing
+
+Contributions are welcome! Areas for improvement:
+- Additional assembly instructions
+- Optimization passes
+- Better error messages
+- More example programs
+- Documentation improvements
 

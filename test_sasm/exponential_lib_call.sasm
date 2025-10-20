@@ -1,0 +1,25 @@
+IMPORT exponential_lib
+SAY "Starting exponential calculations"
+VAR A
+VAR B
+SET A, #1
+SET B, #2
+SET R0, A
+SET R1, B
+SAY "Result of {R0}^{R1} is :"
+CALL :exponential_lib.POWER_FUNC
+SAY "{R0}"
+ADD A, #1
+ADD B, #1
+SET R0, A
+SET R1, B
+SAY "Result of {R0}^{R1} is :"
+CALL :exponential_lib.POWER_FUNC
+SAY "{R0}"
+ADD A, #1
+ADD B, #1
+SET R0, A
+SET R1, B
+SAY "Result of {R0}^{R1} is :"
+CALL :exponential_lib.POWER_FUNC
+SAY "{R0}"
