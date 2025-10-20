@@ -39,9 +39,17 @@ class Precompiler:
                 )
             def handle_import(line,*kwargs):
                 _, module = line.split(" ", 1)
-                if os.path.exists(module+".sasm"):
+                path = os.path.dirname(os.path.abspath(input_path))
+                path = os.path.join(path, module+".sasm")
+                out_path_temp = os.path.dirname(os.path.abspath(output_path))
+                out_path_temp = os.path.join(out_path_temp, "libs")
+                if not os.path.exists(out_path_temp):
+                    os.makedirs(out_path_temp)
+                out_path_temp = os.path.join(out_path_temp, module+".asm")
+                print(f"Importing module: {module} from path: {path}")
+                if os.path.exists(path):
                     imported_script = f":{script_prefix}{module}_IMPORT\n"
-                    imported_script += self.precompile(module+".sasm", module+".asm", script_prefix=script_prefix+module+".")
+                    imported_script += self.precompile(path, out_path_temp, script_prefix=script_prefix+module+".")
                     self.library_script += imported_script+"\n"
                     res = handle_call(f"CALL :{script_prefix}{module}_IMPORT")
                     return res
