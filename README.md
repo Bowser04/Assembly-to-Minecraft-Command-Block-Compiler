@@ -8,9 +8,9 @@ A Python-based toolkit for compiling custom assembly language into Minecraft com
 
 ## Showcase Video
 
-https://github.com/user-attachments/assets/782e197f-3a18-4ce4-a1da-3e077bfbd58c
-
-
+currently broken sorry
+you can check 
+showcase.mp4 in the repo
 
 
 
