@@ -66,6 +66,9 @@ class Emulator:
             case "VAR":
                 self.handle_var(line)
                 self.line +=1
+            case "CMD":
+                # Ignore CMD in emulator
+                self.line += 1
             case _:
                 if line.startswith(":"):
                     self.end=True
@@ -129,18 +132,24 @@ class Emulator:
             storage[var] = int(value.replace("#", ""))
         else:
             storage[var] = self.VARIABLE[value]
-            
-    def handle_say(self, line):
+
+    def handle_say(self, line, return_text=False):
         text = line.split('"')[1]
         text = text.replace("{", "ùVAR:").replace("}", "ù").split("ù")
         final_text = ""
         for i in range(len(text)):
             if text[i].startswith("VAR:"):
                 var_name = text[i][len("VAR:"):]
-                final_text += str(self.REGISTERS.get(var_name, 0))
+                if var_name in self.VARIABLE:
+                    final_text += str(self.VARIABLE.get(var_name, f"ERROR NOT FOUND {var_name}"))
+                else:
+                    final_text += str(self.REGISTERS.get(var_name, f"ERROR NOT FOUND {var_name}"))
             else:
                 final_text += text[i]
-        print(final_text)
+        if return_text:
+            return final_text
+        else:
+            print(final_text)
     def handle_goto(self, line):
         _, label = line.split()
         label = label.replace(":", "")
@@ -169,18 +178,35 @@ class Emulator:
         label = label.replace(":", "")
         res = None
         if self.script[self.line+1].startswith("ELSE") and  self.script[self.line+2].startswith("CLR"):
+            # Get value of A
+            if A.startswith("R"):
+                val_A = self.REGISTERS[A]
+            elif A.startswith("#"):
+                val_A = int(A.replace("#", ""))
+            else:
+                val_A = self.VARIABLE[A]
+            
+            # Get value of B
+            if B.startswith("R"):
+                val_B = self.REGISTERS[B]
+            elif B.startswith("#"):
+                val_B = int(B.replace("#", ""))
+            else:
+                val_B = self.VARIABLE[B]
+            
+            # Perform comparison
             if op == "=":
-                res = self.REGISTERS[A] == self.REGISTERS[B]
+                res = val_A == val_B
             elif op == "!=":
-                res = self.REGISTERS[A] != self.REGISTERS[B]
+                res = val_A != val_B
             elif op == "<":
-                res = self.REGISTERS[A] < self.REGISTERS[B]
+                res = val_A < val_B
             elif op == "<=":
-                res = self.REGISTERS[A] <= self.REGISTERS[B]
+                res = val_A <= val_B
             elif op == ">":
-                res = self.REGISTERS[A] > self.REGISTERS[B]
+                res = val_A > val_B
             elif op == ">=":
-                res = self.REGISTERS[A] >= self.REGISTERS[B]
+                res = val_A >= val_B
 
             if res:
                 if self.labels.get(label):
