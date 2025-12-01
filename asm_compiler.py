@@ -5,7 +5,7 @@ import component
 
 class AssemblerCompiler:
     def __init__(self):
-        self.EX = ["ADD", "SUB", "MUL", "DIV", "SET", "SHOW", "SAY", "CLR", "TAG", "SLF", "CALL", "RET", "IF", "ELSE", "GOTO", "VAR"]
+        self.EX = ["ADD", "SUB", "MUL", "DIV", "SET", "SHOW", "SAY", "CLR", "TAG", "SLF", "CALL", "RET", "IF", "ELSE", "GOTO", "VAR", "CMD"]
         self.goto = {}
         self.last_parts = None
         self.temp = True
@@ -131,10 +131,10 @@ class AssemblerCompiler:
         elif line.startswith("MUL"):
             parts = line.split()
             if parts[2].startswith("#"):
-                AssertionError("MUL command does not support immediate values")
+                raise ValueError("MUL command does not support immediate values")
             else:
                 command_surface[y][x] = component.CommandBlock(f"/scoreboard players operation REG {parts[1].replace(',', '')} *= REG {parts[2].replace(',', '')}", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
-            print(f"Processed MUL: {parts[1].replace(',', '')} * {parts[2].replace(',', '')}")
+                print(f"Processed MUL: {parts[1].replace(',', '')} * {parts[2].replace(',', '')}")
         
         elif line.startswith("SHOW"):
             parts = line.split()
@@ -153,7 +153,7 @@ class AssemblerCompiler:
                 command_surface[y][x] = component.CommandBlock(f"setblock ~{target_y-y} ~1 ~{target_x-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
                 print(f"GOTO found: {label} at ({target_y}, {target_x})")
             else:
-                AssertionError(f"Error: GOTO label {label} not defined")
+                raise ValueError(f"Error: GOTO label {label} not defined")
         
         elif line.startswith("SET"):
             parts = line.split()
@@ -181,7 +181,10 @@ class AssemblerCompiler:
 
         elif line.startswith("RET"):
             command_surface[y][x] = component.CommandBlock(f"setblock ~{2-y} ~1 ~{0-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
-
+        elif line.startswith("CMD"):
+            parts = line.split(" ",1)
+            command_surface[y][x] = component.CommandBlock(parts[1], "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
+            print(f"Processed CMD: {parts[1]}")
         elif line.startswith("IF"):
             parts = line.split()
             self.last_parts = parts
@@ -201,7 +204,7 @@ class AssemblerCompiler:
                 case ">=":
                     command_surface[y][x] = component.CommandBlock(f"execute if score REG {parts[1].replace(',', '')} >= REG {parts[3].replace(',', '')} run setblock ~{target_y-y} ~1 ~{target_x-x} minecraft:redstone_block", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
                 case _:
-                    AssertionError(f"Unknown operator: {op}")
+                    raise ValueError(f"Unknown operator: {op}")
             print(f"Processed IF: {parts[1].replace(',', '')} {op} {parts[3].replace(',', '')} GOTO {parts[4].replace(':', '')}")
         
         elif line.startswith("ELSE"):
@@ -241,26 +244,26 @@ class AssemblerCompiler:
                 command_surface[y][x] = component.CommandBlock(command, "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
                 print(f"Processed SAY: {" ".join(parts[1:])}")
             else:
-                AssertionError("SAY command requires a message")
+                raise ValueError("SAY command requires a message")
         
         elif line.startswith("DIV"):
             parts = line.split()
             if parts[2].startswith("#"):
-                AssertionError("DIV command does not support immediate values")
+                raise ValueError("DIV command does not support immediate values")
             else:
                 command_surface[y][x] = component.CommandBlock(f"/scoreboard players operation REG {parts[1].replace(',', '')} /= REG {parts[2].replace(',', '')}", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
-            print(f"Processed DIV: {parts[1].replace(',', '')} / {parts[2].replace(',', '')}")
+                print(f"Processed DIV: {parts[1].replace(',', '')} / {parts[2].replace(',', '')}")
         
         elif line.startswith("VAR"):
             parts = line.split()
             if len(parts) != 2:
-                AssertionError("VAR command requires a variable name")
+                raise ValueError("VAR command requires a variable name")
             var_name = parts[1].replace(",", "")
             command_surface[y][x] = component.CommandBlock(f"/scoreboard objectives add {var_name} dummy", "" if not chained else "chain",orientation=orientation, source_line=line_number, source_code=line)
             print(f"Processed VAR: {var_name}")
         
         else:
-            AssertionError(f"Unknown command: {line}")
+            raise ValueError(f"Unknown command: {line}")
         
         return True
     

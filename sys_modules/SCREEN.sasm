@@ -1,0 +1,53 @@
+CMD kill @e[type=minecraft:armor_stand,tag=display_idx]
+CMD kill @e[type=minecraft:armor_stand,tag=x_tracker]
+CMD kill @e[type=minecraft:armor_stand,tag=y_tracker]
+VAR display_x
+VAR display_y
+VAR screen_size_y
+SET display_y #16
+SET screen_size_y #0
+-- summon position tracker armor stands at origin
+CMD summon minecraft:armor_stand ~ ~5 ~ {Tags:["x_tracker"],Invisible:1b,NoGravity:1b,Marker:1b}
+CMD summon minecraft:armor_stand ~ ~5 ~ {Tags:["y_tracker"],Invisible:1b,NoGravity:1b,Marker:1b}
+GOTO :Build_Screen
+
+:Build_Screen_Return
+SAY "Screen built successfully."
+-- Don't kill trackers - leave them for drawing operations
+GOTO :END
+
+:Build_Screen
+    GOTO :Build_Screen_Loop_Y
+    
+:Build_Screen_Loop_Y
+    SET display_x #16
+    -- reset x_tracker to y_tracker position at start of each row
+    CMD execute as @e[type=minecraft:armor_stand,tag=x_tracker] at @e[type=minecraft:armor_stand,tag=y_tracker] run tp @s ~ ~ ~
+    GOTO :Build_Screen_Loop_X
+    
+:Build_Screen_Loop_X
+    -- place redstone lamp and armor stand at x_tracker position
+    CMD execute at @e[type=minecraft:armor_stand,tag=x_tracker] run setblock ~ ~ ~ minecraft:redstone_lamp
+    CMD execute at @e[type=minecraft:armor_stand,tag=x_tracker] run summon minecraft:armor_stand ~ ~ ~-1 {Tags:["display_idx"],Invisible:1b,NoGravity:1b,Marker:1b}
+    CMD execute as @e[type=minecraft:armor_stand,tag=x_tracker] at @s run tp @s ~1 ~ ~
+    
+    -- decrement x counter and loop (countdown is faster - only 1 comparison)
+    SUB display_x #1
+    IF display_x = screen_size_y :Build_Screen_Next_Y
+    GOTO :Build_Screen_Loop_X
+    
+:Build_Screen_Next_Y
+    -- move y_tracker one block up
+    CMD execute as @e[type=minecraft:armor_stand,tag=y_tracker] at @s run tp @s ~ ~1 ~
+    
+    -- decrement y counter (countdown eliminates variable comparison)
+    SUB display_y #1
+    IF display_y = screen_size_y :Build_Screen_Done
+    GOTO :Build_Screen_Loop_Y
+    
+:Build_Screen_Done
+    GOTO :Build_Screen_Return
+
+:END
+-- DO NOT DELETE THE FOLOWING LINE --
+END

@@ -1,0 +1,6 @@
+VAR floatValue
+FSET floatValue #10.5
+FADD floatValue #2.3
+FMUL floatValue #3.0
+FDIV floatValue #2.0
+FSHOW "After Addition: {floatValue}"

@@ -31,19 +31,11 @@ class Debugger(Emulator):
             self.end = True
         return True
 
-    def handle_say(self, line):
+    def handle_say(self, line, *kwargs):
         # Override to capture output
-        text = line.split('"')[1]
-        text = text.replace("{", "ùVAR:").replace("}", "ù").split("ù")
-        final_text = ""
-        for i in range(len(text)):
-            if text[i].startswith("VAR:"):
-                var_name = text[i][len("VAR:"):]
-                final_text += str(self.REGISTERS.get(var_name, 0))
-            else:
-                final_text += text[i]
+        text = super().handle_say(line, return_text=True)
         if self.output_callback:
-            self.output_callback(final_text)
+            self.output_callback(text)
 
     def get_state(self): 
         return {

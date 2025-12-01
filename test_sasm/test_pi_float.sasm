@@ -1,0 +1,91 @@
+-- Pi Calculator using Leibniz Formula with Float Arithmetic
+-- Calculates pi to approximately 4 decimal places
+-- Formula: π/4 = 1 - 1/3 + 1/5 - 1/7 + 1/9 - ...
+-- Uses custom float system for cleaner code
+
+SAY "=== Pi Calculator (Float Version) ==="
+SAY "Computing pi with float arithmetic..."
+SAY ""
+
+-- Initialize variables
+VAR pi_sum
+VAR denominator
+VAR term
+VAR sign
+VAR iteration
+VAR max_iter
+VAR progress_interval
+VAR pi_temp
+
+-- Initialize float values
+FSET pi_sum #0.0
+FSET denominator #1.0
+FSET sign #1.0
+SET iteration #0
+SET max_iter #500
+SET progress_interval #50
+
+SAY "Starting calculation (500 iterations)..."
+GOTO :CALC_LOOP
+
+-- Main calculation loop
+:CALC_LOOP
+   -- Calculate term = 1 / denominator
+   FSET term #1.0
+   FDIV term denominator
+   
+   -- Multiply term by sign (1.0 or -1.0)
+   FMUL term sign
+   
+   -- Add term to pi_sum
+   FADD pi_sum term
+   
+   -- Update denominator (add 2: 1, 3, 5, 7, 9, ...)
+   FADD denominator #2.0
+   
+   -- Flip sign: multiply by -1
+   FMUL sign #-1.0
+   
+   -- Increment iteration counter
+   ADD iteration #1
+   
+   -- Show progress every 500 iterations (10%)
+   SET R7 iteration
+   DIV R7 progress_interval
+   MUL R7 progress_interval
+   IF R7 = iteration :SHOW_PROGRESS
+   GOTO :CHECK_DONE
+
+:SHOW_PROGRESS
+   -- Calculate current Pi estimate (multiply pi_sum by 4 temporarily)
+   FSET pi_temp pi_sum
+   FMUL pi_temp #4.0
+   
+   SET R6 iteration
+   SET R7 #5
+   DIV R6 R7
+   SAY "Progress: {R6}% | Iterations: {iteration}"
+   FSHOW "Current Pi ≈ {pi_temp}"
+   GOTO :CHECK_DONE
+
+:CHECK_DONE
+   -- Check if we've reached max iterations
+   IF iteration = max_iter :CALC_DONE
+   GOTO :CALC_LOOP
+
+:CALC_DONE
+SAY ""
+SAY "Calculation complete!"
+SAY ""
+
+-- Final calculation: Multiply by 4 to get π
+FMUL pi_sum #4.0
+
+-- Display final result
+SAY "=== FINAL RESULT ==="
+FSHOW "Pi ≈ {pi_sum}"
+SAY ""
+SAY "Expected: Pi ≈ 3.1416"
+SAY "=== Calculation Complete ==="
+
+:END

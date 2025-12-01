@@ -1,6 +1,13 @@
 # Assembly to Minecraft Command Block Compiler
 
-[![Star History Chart](https://api.star-history.com/svg?repos=Bowser04/Assembly-to-Minecraft-Command-Block-Compiler&type=date&legend=top-left)](https://www.star-history.com/#Bowser04/Assembly-to-Minecraft-Command-Block-Compiler&type=date&legend=top-left)
+> [!WARNING]
+> **⚠️ ARCHITECTURE REWORK IN PROGRESS ⚠️**
+>
+> The entire project architecture and the custom ASM language are currently being reworked.
+> The current codebase will soon be moved to a branch named `old`.
+> Expect breaking changes and significant modifications.
+
+[![Star History Chart](https://api.star-history.com/svg?repos=Bowser04/Assembly-to-Minecraft-Command-Block-Compiler&type=Date)](https://www.star-history.com/#Bowser04/Assembly-to-Minecraft-Command-Block-Compiler&Date)
 
 > **⚠️ Development Status**: This project is currently under active development. Features and syntax may change.
 
@@ -17,6 +24,9 @@ showcase.mp4 in the repo
 ## Features
 
 - **Custom Assembly Language**: Arithmetic, flow control, memory management, function calls
+- **[NEW] Float Support**: Now supports floating-point arithmetic!
+  - Use `FSET`, `FADD`, `FMUL`, `FDIV` for calculations.
+  - Use `FSHOW` to display float values.
 - **Precompiler**: Converts `.sasm` scripts to `.asm` format with macro and control flow expansion
 - **Emulator**: Fast Python-based simulation for testing assembly code
 - **Interactive Debugger**: GUI debugger with step-by-step execution, breakpoints, and register inspection

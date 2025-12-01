@@ -1,0 +1,169 @@
+-- Screen Drawing Test
+-- Imports the SCREEN module and draws various patterns
+
+SAY "=== Screen Drawing Test ==="
+IMPORT SCREEN
+
+SAY "Drawing a diagonal line..."
+GOTO :Draw_Diagonal
+
+:Draw_Diagonal
+    -- Draw diagonal line from (0,0) to (15,15)
+    SET R0 #0
+    SET R1 #16
+    GOTO :Diagonal_Loop
+
+:Diagonal_Loop
+    -- Set pixel at (R0, R0) to ON
+    -- Move tracker to position
+    CMD execute as @e[type=minecraft:armor_stand,tag=y_tracker] run tp @s ~ ~5 ~
+    CMD execute as @e[type=minecraft:armor_stand,tag=x_tracker] at @e[type=minecraft:armor_stand,tag=y_tracker] run tp @s ~ ~ ~
+    
+    -- Move to R0 position in both axes
+    SET R2 R0
+    GOTO :Move_Y_Loop
+
+:Move_Y_Loop
+    IF R2 = #0 :Move_X_Start
+    CMD execute as @e[type=minecraft:armor_stand,tag=y_tracker] at @s run tp @s ~ ~1 ~
+    CMD execute as @e[type=minecraft:armor_stand,tag=x_tracker] at @s run tp @s ~ ~1 ~
+    SUB R2 #1
+    GOTO :Move_Y_Loop
+
+:Move_X_Start
+    SET R2 R0
+    GOTO :Move_X_Loop
+
+:Move_X_Loop
+    IF R2 = #0 :Place_Pixel
+    CMD execute as @e[type=minecraft:armor_stand,tag=x_tracker] at @s run tp @s ~1 ~ ~
+    SUB R2 #1
+    GOTO :Move_X_Loop
+
+:Place_Pixel
+    -- Turn ON the pixel (use glowstone instead of lamp)
+    CMD execute at @e[type=minecraft:armor_stand,tag=x_tracker] run setblock ~ ~ ~ minecraft:glowstone
+    
+    ADD R0 #1
+    IF R0 = R1 :Draw_Cross
+    GOTO :Diagonal_Loop
+
+:Draw_Cross
+    SAY "Drawing a cross pattern..."
+    -- Draw horizontal line at y=8
+    SET R0 #0
+    SET R3 #8
+    GOTO :Draw_H_Line
+
+:Draw_H_Line
+    CMD execute as @e[type=minecraft:armor_stand,tag=y_tracker] run tp @s ~ ~5 ~
+    CMD execute as @e[type=minecraft:armor_stand,tag=x_tracker] at @e[type=minecraft:armor_stand,tag=y_tracker] run tp @s ~ ~ ~
+    
+    -- Move Y to position 8
+    SET R2 R3
+    GOTO :H_Move_Y
+
+:H_Move_Y
+    IF R2 = #0 :H_Draw_Loop
+    CMD execute as @e[type=minecraft:armor_stand,tag=y_tracker] at @s run tp @s ~ ~1 ~
+    CMD execute as @e[type=minecraft:armor_stand,tag=x_tracker] at @s run tp @s ~ ~1 ~
+    SUB R2 #1
+    GOTO :H_Move_Y
+
+:H_Draw_Loop
+    -- Place pixel
+    CMD execute at @e[type=minecraft:armor_stand,tag=x_tracker] run setblock ~ ~ ~ minecraft:sea_lantern
+    CMD execute as @e[type=minecraft:armor_stand,tag=x_tracker] at @s run tp @s ~1 ~ ~
+    
+    ADD R0 #1
+    IF R0 = #16 :Draw_V_Line
+    GOTO :H_Draw_Loop
+
+:Draw_V_Line
+    -- Draw vertical line at x=8
+    SET R0 #0
+    SET R3 #8
+    GOTO :V_Line_Start
+
+:V_Line_Start
+    CMD execute as @e[type=minecraft:armor_stand,tag=y_tracker] run tp @s ~ ~5 ~
+    CMD execute as @e[type=minecraft:armor_stand,tag=x_tracker] at @e[type=minecraft:armor_stand,tag=y_tracker] run tp @s ~ ~ ~
+    
+    -- Move X to position 8
+    SET R2 R3
+    GOTO :V_Move_X
+
+:V_Move_X
+    IF R2 = #0 :V_Draw_Loop
+    CMD execute as @e[type=minecraft:armor_stand,tag=x_tracker] at @s run tp @s ~1 ~ ~
+    SUB R2 #1
+    GOTO :V_Move_X
+
+:V_Draw_Loop
+    -- Place pixel
+    CMD execute at @e[type=minecraft:armor_stand,tag=x_tracker] run setblock ~ ~ ~ minecraft:sea_lantern
+    CMD execute as @e[type=minecraft:armor_stand,tag=y_tracker] at @s run tp @s ~ ~1 ~
+    CMD execute as @e[type=minecraft:armor_stand,tag=x_tracker] at @e[type=minecraft:armor_stand,tag=y_tracker] run tp @s ~ ~ ~
+    
+    -- Move X back to position 8
+    SET R2 R3
+    GOTO :V_Restore_X
+
+:V_Restore_X
+    IF R2 = #0 :V_Next_Pixel
+    CMD execute as @e[type=minecraft:armor_stand,tag=x_tracker] at @s run tp @s ~1 ~ ~
+    SUB R2 #1
+    GOTO :V_Restore_X
+
+:V_Next_Pixel
+    ADD R0 #1
+    IF R0 = #16 :Draw_Border
+    GOTO :V_Draw_Loop
+
+:Draw_Border
+    SAY "Drawing border..."
+    -- Draw rectangle border
+    SET R0 #0
+    GOTO :Border_Top
+
+:Border_Top
+    -- Top edge (y=0)
+    CMD execute as @e[type=minecraft:armor_stand,tag=y_tracker] run tp @s ~ ~5 ~
+    CMD execute as @e[type=minecraft:armor_stand,tag=x_tracker] at @e[type=minecraft:armor_stand,tag=y_tracker] run tp @s ~ ~ ~
+    GOTO :Border_Top_Loop
+
+:Border_Top_Loop
+    CMD execute at @e[type=minecraft:armor_stand,tag=x_tracker] run setblock ~ ~ ~ minecraft:redstone_block
+    CMD execute as @e[type=minecraft:armor_stand,tag=x_tracker] at @s run tp @s ~1 ~ ~
+    ADD R0 #1
+    IF R0 = #16 :Border_Bottom
+    GOTO :Border_Top_Loop
+
+:Border_Bottom
+    -- Bottom edge (y=15)
+    SET R0 #0
+    CMD execute as @e[type=minecraft:armor_stand,tag=y_tracker] run tp @s ~ ~5 ~
+    CMD execute as @e[type=minecraft:armor_stand,tag=x_tracker] at @e[type=minecraft:armor_stand,tag=y_tracker] run tp @s ~ ~ ~
+    
+    SET R2 #15
+    GOTO :Border_Bottom_Move
+
+:Border_Bottom_Move
+    IF R2 = #0 :Border_Bottom_Loop
+    CMD execute as @e[type=minecraft:armor_stand,tag=y_tracker] at @s run tp @s ~ ~1 ~
+    CMD execute as @e[type=minecraft:armor_stand,tag=x_tracker] at @s run tp @s ~ ~1 ~
+    SUB R2 #1
+    GOTO :Border_Bottom_Move
+
+:Border_Bottom_Loop
+    CMD execute at @e[type=minecraft:armor_stand,tag=x_tracker] run setblock ~ ~ ~ minecraft:redstone_block
+    CMD execute as @e[type=minecraft:armor_stand,tag=x_tracker] at @s run tp @s ~1 ~ ~
+    ADD R0 #1
+    IF R0 = #16 :Complete
+    GOTO :Border_Bottom_Loop
+
+:Complete
+SAY "Drawing complete!"
+GOTO :END
+
+:END

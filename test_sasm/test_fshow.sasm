@@ -1,0 +1,22 @@
+-- Test FSHOW command with various values
+
+SAY "=== Testing FSHOW Command ==="
+SAY ""
+
+FSET test1, #3.1416
+FSET test2, #0.7854
+FSET test3, #123.4567
+
+SAY "Test 1: Pi value"
+FSHOW "test1 = {test1}"
+
+SAY ""
+SAY "Test 2: Small fraction"
+FSHOW "test2 = {test2}"
+
+SAY ""
+SAY "Test 3: Larger number"
+FSHOW "test3 = {test3}"
+
+SAY ""
+SAY "=== Tests Complete ==="

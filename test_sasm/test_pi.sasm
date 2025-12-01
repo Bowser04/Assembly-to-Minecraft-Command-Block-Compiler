@@ -1,0 +1,218 @@
+-- Pi Calculator using Leibniz Formula (Improved)
+-- Calculates pi to approximately 4 decimal places
+-- Formula: π/4 = 1 - 1/3 + 1/5 - 1/7 + 1/9 - ...
+-- We use fixed-point arithmetic with scale factor 100000 for better precision
+
+SAY "=== Pi Calculator (Leibniz Formula) ==="
+SAY "Computing pi with improved precision..."
+SAY ""
+
+-- Initialize variables
+VAR pi_sum
+VAR denominator
+VAR term
+VAR sign
+VAR iteration
+VAR max_iter
+VAR temp
+VAR pi_result
+VAR scale_factor
+VAR div_helper
+VAR pi_display
+VAR frac_part
+VAR digit0
+VAR digit1
+VAR digit2
+VAR digit3
+VAR remainder
+
+-- Setup: scale_factor = 100000 (for better precision)
+SET scale_factor, #100000
+
+-- pi_sum will hold (π/4) * scale_factor
+SET pi_sum, #0
+
+-- Start with denominator = 1
+SET denominator, #1
+
+-- Start with positive sign (1)
+SET sign, #1
+
+-- Iteration counter
+SET iteration, #0
+
+-- Maximum iterations (more = better accuracy)
+SET max_iter, #50000
+
+-- Progress display interval (every 1% = 500 iterations for 50000 total)
+SET div_helper, #500
+
+SAY "Starting calculation (50000 iterations)..."
+GOTO :CALC_LOOP
+
+-- Main calculation loop
+:CALC_LOOP
+   -- Calculate term = scale_factor / denominator
+   SET term, scale_factor
+   DIV term, denominator
+   
+   -- Multiply term by sign (1 or -1)
+   MUL term, sign
+   
+   -- Add term to pi_sum
+   ADD pi_sum, term
+   
+   -- Update denominator (add 2: 1, 3, 5, 7, 9, ...)
+   ADD denominator, #2
+   
+   -- Flip sign: multiply by -1
+   SET temp, #-1
+   MUL sign, temp
+   
+   -- Increment iteration counter
+   ADD iteration, #1
+   
+   -- Show progress and current estimation every 50 iterations (1%)
+   SET temp, iteration
+   DIV temp, div_helper
+   MUL temp, div_helper
+   IF temp = iteration :SHOW_PROGRESS
+   GOTO :CHECK_DONE
+
+:SHOW_PROGRESS
+   -- Calculate current pi estimation
+   SET pi_display, pi_sum
+   SET temp, #4
+   MUL pi_display, temp
+   
+   -- Extract integer part
+   SET pi_result, pi_display
+   SET temp, scale_factor
+   DIV pi_result, temp
+   
+   -- Extract fractional part
+   SET frac_part, pi_result
+   SET temp, scale_factor
+   MUL frac_part, temp
+   SET temp, pi_display
+   SUB temp, frac_part
+   SET frac_part, temp
+   
+   -- Convert to 10000 scale for 4 digits
+   SET div_helper, #10
+   DIV frac_part, div_helper
+   
+   -- Extract digits using modulo approach
+   SET remainder, frac_part
+   
+   -- Digit 0 (tenths): frac_part / 1000
+   SET digit0, remainder
+   SET div_helper, #1000
+   DIV digit0, div_helper
+   
+   -- Digit 1 (hundredths): (frac_part % 1000) / 100
+   SET temp, digit0
+   SET div_helper, #1000
+   MUL temp, div_helper
+   SUB remainder, temp
+   SET digit1, remainder
+   SET div_helper, #100
+   DIV digit1, div_helper
+   
+   -- Digit 2 (thousandths): (frac_part % 100) / 10
+   SET temp, digit1
+   SET div_helper, #100
+   MUL temp, div_helper
+   SUB remainder, temp
+   SET digit2, remainder
+   SET div_helper, #10
+   DIV digit2, div_helper
+   
+   -- Digit 3 (ten-thousandths): frac_part % 10
+   SET temp, digit2
+   SET div_helper, #10
+   MUL temp, div_helper
+   SUB remainder, temp
+   SET digit3, remainder
+   
+   -- Show progress with current estimation
+   SET temp, iteration
+   SET div_helper, #500
+   DIV temp, div_helper
+   SAY "Progress: {temp}% | Current Pi ≈ {pi_result}.{digit0}{digit1}{digit2}{digit3}"
+   
+   -- Reset div_helper for next iteration
+   SET div_helper, #500
+   GOTO :CHECK_DONE
+
+:CHECK_DONE
+   -- Check if we've reached max iterations
+   IF iteration = max_iter :CALC_DONE
+   GOTO :CALC_LOOP
+
+:CALC_DONE
+SAY ""
+SAY "Calculation complete!"
+SAY ""
+
+-- Final calculation: Multiply by 4 to get π * scale_factor
+SET temp, #4
+MUL pi_sum, temp
+
+-- Extract integer part: divide by scale_factor
+SET pi_result, pi_sum
+DIV pi_result, scale_factor
+
+-- Extract fractional part: pi_sum - (pi_result * scale_factor)
+SET temp, pi_result
+SET div_helper, scale_factor
+MUL temp, div_helper
+SUB pi_sum, temp
+SET frac_part, pi_sum
+
+-- Convert to 10000 scale for 4 digits
+SET div_helper, #10
+DIV frac_part, div_helper
+
+-- Extract digits using modulo approach
+SET remainder, frac_part
+
+-- Digit 0 (tenths): frac_part / 1000
+SET digit0, remainder
+SET div_helper, #1000
+DIV digit0, div_helper
+
+-- Digit 1 (hundredths): (remainder % 1000) / 100
+SET temp, digit0
+SET div_helper, #1000
+MUL temp, div_helper
+SUB remainder, temp
+SET digit1, remainder
+SET div_helper, #100
+DIV digit1, div_helper
+
+-- Digit 2 (thousandths): (remainder % 100) / 10
+SET temp, digit1
+SET div_helper, #100
+MUL temp, div_helper
+SUB remainder, temp
+SET digit2, remainder
+SET div_helper, #10
+DIV digit2, div_helper
+
+-- Digit 3 (ten-thousandths): remainder % 10
+SET temp, digit2
+SET div_helper, #10
+MUL temp, div_helper
+SUB remainder, temp
+SET digit3, remainder
+
+-- Display final results
+SAY "=== FINAL RESULT ==="
+SAY "Pi ≈ {pi_result}.{digit0}{digit1}{digit2}{digit3}"
+SAY ""
+SAY "Expected: Pi ≈ 3.1416"
+SAY "(Leibniz formula converges slowly - needs more iterations)"
+SAY "=== Calculation Complete ==="
+
+:END
